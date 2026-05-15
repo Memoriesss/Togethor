@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --deep-space: #0a0a0f;
+  --dark-purple: #1a1a2e;
+  --cosmic-pink: #ff6b6b;
+  --cyber-teal: #4ecdc4;
+  --warm-yellow: #ffe66d;
+  --nebula-purple: #9b59b6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--deep-space);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+.glass-effect {
+  background: rgba(26, 26, 46, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glow-border {
+  box-shadow: 0 0 20px rgba(78, 205, 196, 0.3),
+              inset 0 0 20px rgba(78, 205, 196, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #ffe66d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.ui-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ui-overlay > * {
+  pointer-events: auto;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(78, 205, 196, 0.6);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(78, 205, 196, 0.8),
+               0 0 20px rgba(78, 205, 196, 0.5),
+               0 0 30px rgba(78, 205, 196, 0.3);
+}
+
+.selection-none {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
