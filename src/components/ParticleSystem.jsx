@@ -11,13 +11,15 @@ const ParticleSystem = () => {
   const pointsRef = useRef();
   const currentScene = useStore((state) => state.currentScene);
   
+  // 固定粒子数量以避免 buffer 大小变化的问题
+  const PARTICLE_COUNT = 1000;
+  
   // 粒子配置
   const particleConfig = useMemo(() => {
     const mood = currentScene.mood || 'ethereal';
     
     const configs = {
       mysterious: {
-        count: 800,
         size: 0.05,
         color: '#6666aa',
         speed: 0.1,
@@ -25,7 +27,6 @@ const ParticleSystem = () => {
         type: 'dust',
       },
       peaceful: {
-        count: 200,
         size: 0.08,
         color: '#88ff88',
         speed: 0.15,
@@ -33,7 +34,6 @@ const ParticleSystem = () => {
         type: 'fireflies',
       },
       energetic: {
-        count: 1000,
         size: 0.06,
         color: '#ff66ff',
         speed: 0.8,
@@ -41,7 +41,6 @@ const ParticleSystem = () => {
         type: 'magic',
       },
       dark: {
-        count: 500,
         size: 0.07,
         color: '#ff4500',
         speed: 0.3,
@@ -49,7 +48,6 @@ const ParticleSystem = () => {
         type: 'embers',
       },
       ethereal: {
-        count: 1500,
         size: 0.04,
         color: '#ffffff',
         speed: 0.05,
@@ -57,7 +55,6 @@ const ParticleSystem = () => {
         type: 'stars',
       },
       cyberpunk: {
-        count: 800,
         size: 0.05,
         color: '#00ffff',
         speed: 0.6,
@@ -65,7 +62,6 @@ const ParticleSystem = () => {
         type: 'digital',
       },
       fantasy: {
-        count: 600,
         size: 0.09,
         color: '#da70d6',
         speed: 0.4,
@@ -78,13 +74,12 @@ const ParticleSystem = () => {
   }, [currentScene.mood]);
   
   // 生成粒子初始位置
-  const { positions, velocities, sizes } = useMemo(() => {
-    const count = particleConfig.count;
+  const { positions, velocities } = useMemo(() => {
+    const count = PARTICLE_COUNT;
     const spread = particleConfig.spread;
     
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
     
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
@@ -98,13 +93,10 @@ const ParticleSystem = () => {
       velocities[i3] = (Math.random() - 0.5) * particleConfig.speed;
       velocities[i3 + 1] = (Math.random() - 0.5) * particleConfig.speed;
       velocities[i3 + 2] = (Math.random() - 0.5) * particleConfig.speed;
-      
-      // 随机大小
-      sizes[i] = particleConfig.size * (0.5 + Math.random() * 1.5);
     }
     
-    return { positions, velocities, sizes };
-  }, [particleConfig]);
+    return { positions, velocities };
+  }, [particleConfig.spread, particleConfig.speed]);
   
   // 动画更新
   useFrame((state) => {
@@ -115,26 +107,23 @@ const ParticleSystem = () => {
     const positions = positionAttribute.array;
     const spread = particleConfig.spread;
     
-    for (let i = 0; i < particleConfig.count; i++) {
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
       
       // 根据粒子类型应用不同的运动模式
       switch (particleConfig.type) {
         case 'fireflies':
-          // 萤火虫：缓慢漂浮
           positions[i3] += Math.sin(time * 0.5 + i) * 0.01;
           positions[i3 + 1] += Math.cos(time * 0.3 + i * 0.5) * 0.01;
           positions[i3 + 2] += Math.sin(time * 0.4 + i * 0.7) * 0.01;
           break;
           
         case 'embers':
-          // 余烬：向上飘动
           positions[i3 + 1] += particleConfig.speed * 0.02;
           positions[i3] += Math.sin(time + i) * 0.005;
           break;
           
         case 'magic':
-          // 魔法粒子：螺旋运动
           const angle = time * particleConfig.speed + i * 0.1;
           positions[i3] += Math.cos(angle) * 0.02;
           positions[i3 + 1] += 0.01;
@@ -142,7 +131,6 @@ const ParticleSystem = () => {
           break;
           
         case 'digital':
-          // 数字雨效果
           positions[i3 + 1] -= particleConfig.speed * 0.03;
           if (positions[i3 + 1] < -spread / 2) {
             positions[i3 + 1] = spread / 2;
@@ -150,14 +138,10 @@ const ParticleSystem = () => {
           break;
           
         case 'stars':
-          // 星星：闪烁
-          const twinkle = Math.sin(time * 3 + i * 0.5) * 0.5 + 0.5;
-          pointsRef.current.geometry.attributes.size.array[i] = 
-            particleConfig.size * twinkle;
+          // 星星使用 shader 中的 twinkle 效果
           break;
           
         default:
-          // 默认：缓慢漂浮
           positions[i3] += velocities[i3] * 0.1;
           positions[i3 + 1] += velocities[i3 + 1] * 0.1;
           positions[i3 + 2] += velocities[i3 + 2] * 0.1;
@@ -165,24 +149,20 @@ const ParticleSystem = () => {
       
       // 边界检查和重置
       if (Math.abs(positions[i3]) > spread / 2) {
-        positions[i3] = -positions[i3] * 0.5;
+        positions[i3] = (Math.random() - 0.5) * spread;
       }
       if (Math.abs(positions[i3 + 1]) > spread / 2) {
-        positions[i3 + 1] = -positions[i3 + 1] * 0.5;
+        positions[i3 + 1] = (Math.random() - 0.5) * spread;
       }
       if (Math.abs(positions[i3 + 2]) > spread / 2) {
-        positions[i3 + 2] = -positions[i3 + 2] * 0.5;
+        positions[i3 + 2] = (Math.random() - 0.5) * spread;
       }
     }
     
     positionAttribute.needsUpdate = true;
-    
-    if (particleConfig.type === 'stars') {
-      pointsRef.current.geometry.attributes.size.needsUpdate = true;
-    }
   });
   
-  // 粒子着色器材质
+  // 粒子着色器材质 - 使用 shader 处理大小变化
   const particleMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -191,55 +171,63 @@ const ParticleSystem = () => {
         time: { value: 0 },
       },
       vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
+        uniform float size;
+        uniform float time;
+        varying float vAlpha;
         
         void main() {
-          vColor = color;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size * (300.0 / -mvPosition.z);
+          
+          // 使用 shader 处理 twinkle 效果
+          float twinkle = 0.7 + 0.3 * sin(time * 3.0 + position.x * 10.0);
+          
+          gl_PointSize = size * twinkle * (300.0 / -mvPosition.z);
           gl_Position = projectionMatrix * mvPosition;
+          
+          // 传递 alpha 值给 fragment shader
+          vAlpha = twinkle;
         }
       `,
       fragmentShader: `
         uniform vec3 color;
         uniform float time;
-        varying vec3 vColor;
+        varying float vAlpha;
         
         void main() {
           float dist = length(gl_PointCoord - vec2(0.5));
           if (dist > 0.5) discard;
           
           float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
-          alpha *= 0.8;
+          alpha *= 0.8 * vAlpha;
           
           // 发光效果
-          vec3 glow = color * (1.0 + 0.5 * sin(time * 3.0));
+          float glow = 1.0 + 0.3 * sin(time * 5.0);
+          vec3 finalColor = color * glow;
           
-          gl_FragColor = vec4(mix(color, glow, 0.3), alpha);
+          gl_FragColor = vec4(finalColor, alpha);
         }
       `,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      vertexColors: true,
     });
   }, [particleConfig.color, particleConfig.size]);
+  
+  // 更新 shader 的 time uniform
+  useFrame((state) => {
+    if (particleMaterial.uniforms) {
+      particleMaterial.uniforms.time.value = state.clock.getElapsedTime();
+    }
+  });
   
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={particleConfig.count}
+          count={PARTICLE_COUNT}
           array={positions}
           itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          count={particleConfig.count}
-          array={sizes}
-          itemSize={1}
         />
       </bufferGeometry>
       <primitive object={particleMaterial} attach="material" />
