@@ -115,7 +115,10 @@
   <script>
     window.addEventListener('load', () => {
       setTimeout(() => {
-        document.getElementById('loading').classList.add('hidden');
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+          loadingElement.classList.add('hidden');
+        }
       }, 1500);
     });
   </script>
