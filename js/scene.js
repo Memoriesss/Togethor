@@ -178,7 +178,7 @@ export class SceneManager {
   addDecoration(i) {
     const z = -i * 12 - 20;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (10 + Math.random() * 30);
+    const x = side * (6 + Math.random() * 20);
 
     const themeConfig = this.themes[this.currentTheme];
     const decorationType = Math.floor(Math.random() * 6);
@@ -347,7 +347,7 @@ export class SceneManager {
   addAnimal(i) {
     const z = -i * 30 - 50;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (15 + Math.random() * 25);
+    const x = side * (8 + Math.random() * 15);
     
     const animalTypes = ['bunny', 'chick', 'sheep', 'pig'];
     const type = animalTypes[Math.floor(Math.random() * animalTypes.length)];
@@ -591,8 +591,8 @@ export class SceneManager {
       if (distanceToTrain < 25 && animal.position.z > -20 && animal.position.z < 20) {
         animal.userData.state = 'attracted';
         
-        const targetX = (Math.random() - 0.5) * 6;
-        const targetZ = animal.position.z + (Math.random() - 0.5) * 3;
+        const targetX = (Math.random() - 0.5) * 4;
+        const targetZ = animal.position.z + (Math.random() - 0.5) * 2;
         
         const dx = targetX - animal.position.x;
         const dz = targetZ - animal.position.z;
@@ -611,9 +611,9 @@ export class SceneManager {
       }
       
       if (animal.position.z > 30) {
-        animal.position.z -= 500;
-        animal.position.x = (Math.random() - 0.5) * 40;
-      }
+         animal.position.z -= 500;
+         animal.position.x = (Math.random() - 0.5) * 30;
+       }
     });
   }
 
