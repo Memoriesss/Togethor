@@ -44,8 +44,8 @@ export class Train {
     frontSlope.castShadow = true;
     bodyGroup.add(frontSlope);
 
-    const cabinColor = this.isPlayer ? 0x888888 : mainColor;
-    const cabinOpacity = this.isPlayer ? 0.15 : 1;
+    const cabinColor = mainColor;
+    const cabinOpacity = 1;
     
     const cabinGeometry = new THREE.BoxGeometry(2.4, 2, 2.5);
     const cabinMaterial = new THREE.MeshStandardMaterial({ 
