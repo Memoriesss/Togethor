@@ -14,6 +14,7 @@ export class SceneManager {
     this.currentTheme = 'mountain';
     this.isMoving = false;
     this.speed = 0.15;
+    this.viewMode = 'third'; // 'first' 或 'third'
     
     this.themes = {
       mountain: { ground: 0x228B22, sky: 0x87CEEB, accent: 0x8B4513 },
@@ -42,8 +43,7 @@ export class SceneManager {
       0.1,
       3000
     );
-    this.camera.position.set(0, 5, 6);
-    this.camera.lookAt(0, 3, -30);
+    this.setCameraView('third');
 
     this.renderer = new THREE.WebGLRenderer({ 
       canvas: this.container,
@@ -61,6 +61,21 @@ export class SceneManager {
     this.addEnvironment();
 
     window.addEventListener('resize', () => this.onWindowResize());
+  }
+
+  setCameraView(mode) {
+    this.viewMode = mode;
+    if (mode === 'first') {
+      this.camera.position.set(0, 2.2, 1.5);
+      this.camera.lookAt(0, 2.2, -15);
+    } else {
+      this.camera.position.set(0, 5, 6);
+      this.camera.lookAt(0, 3, -30);
+    }
+  }
+
+  toggleView() {
+    this.setCameraView(this.viewMode === 'first' ? 'third' : 'first');
   }
 
   addLights() {

@@ -5,6 +5,7 @@ export class UI {
       homeBtn: document.getElementById('home-btn'),
       continueBtn: document.getElementById('continue-btn'),
       castBtn: document.getElementById('cast-btn'),
+      viewBtn: document.getElementById('view-btn'),
       currentChar: document.getElementById('current-char'),
       currentPinyin: document.getElementById('current-pinyin'),
       sceneChar: document.getElementById('scene-char'),
@@ -24,6 +25,7 @@ export class UI {
       onHome: null,
       onContinue: null,
       onCast: null,
+      onViewToggle: null,
       onManualSubmit: null
     };
 
@@ -46,6 +48,12 @@ export class UI {
     this.elements.castBtn.addEventListener('click', () => {
       if (this.callbacks.onCast) this.callbacks.onCast();
     });
+
+    if (this.elements.viewBtn) {
+      this.elements.viewBtn.addEventListener('click', () => {
+        if (this.callbacks.onViewToggle) this.callbacks.onViewToggle();
+      });
+    }
 
     this.elements.submitBtn.addEventListener('click', () => {
       this.handleManualSubmit();

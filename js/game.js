@@ -68,6 +68,7 @@ export class GameManager {
     this.ui.on('onHome', () => this.goHome());
     this.ui.on('onContinue', () => this.nextCharacter());
     this.ui.on('onCast', () => this.toggleCast());
+    this.ui.on('onViewToggle', () => this.toggleView());
     this.ui.on('onManualSubmit', (value) => this.handleManualInput(value));
   }
 
@@ -91,6 +92,12 @@ export class GameManager {
       }
     } catch (error) {
       console.error('投屏失败:', error);
+    }
+  }
+
+  toggleView() {
+    if (this.sceneManager) {
+      this.sceneManager.toggleView();
     }
   }
 
