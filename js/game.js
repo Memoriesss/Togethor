@@ -201,7 +201,8 @@ export class GameManager {
             this.lastSpeedDecrease = now;
           }
         } else {
-          this.playerTrain.decreaseSpeed(delta * 2);
+          // 非行驶状态下也缓慢减少速度，保持游戏平衡
+          this.playerTrain.decreaseSpeed(delta * 0.5);
         }
       }
       
@@ -210,15 +211,17 @@ export class GameManager {
         
         aiTrain.update(delta);
         
+        // AI速度每2秒变化一次，更频繁
         aiTrain.speedChangeTimer += delta;
         
-        if (aiTrain.speedChangeTimer > 3) {
+        if (aiTrain.speedChangeTimer > 2) {
           aiTrain.speedChangeTimer = 0;
-          aiTrain.targetSpeed = 38 + Math.random() * 18;
+          aiTrain.targetSpeed = 40 + Math.random() * 15;
         }
         
         const speedDiff = aiTrain.targetSpeed - aiTrain.currentSpeed;
-        aiTrain.currentSpeed += speedDiff * delta * 0.5;
+        // AI速度调整更平缓
+        aiTrain.currentSpeed += speedDiff * delta * 1.0;
         
         const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
         aiTrain.getObject().position.x = aiTrackPos.x + this.trackOffsets[index];

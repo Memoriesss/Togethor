@@ -124,11 +124,15 @@ export class Train {
     const carLength = 4;
     const gap = 0.2;
     const startZ = 6;
+    
+    // 车厢数量很多时减小间距，让火车更紧凑
+    const actualGap = this.carCount > 20 ? 0.1 : gap;
 
     for (let i = 0; i < this.carCount; i++) {
       const carGroup = new THREE.Group();
       this.carGroups.push(carGroup);
-      const zPos = startZ + i * (carLength + gap);
+      // 车厢从车头往前延伸（负Z方向），在相机视野内
+      const zPos = startZ + i * (carLength + actualGap);
 
       const carBodyGeometry = new THREE.BoxGeometry(2.6, 1.8, carLength);
       const carBodyMaterial = new THREE.MeshStandardMaterial({ 
