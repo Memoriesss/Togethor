@@ -23,7 +23,7 @@ export class GameManager {
     this.clock = new THREE.Clock();
     this.lastSpeedDecrease = 0;
     this.speedDecreaseInterval = 5000;
-    this.trackOffsets = [-4, 0, 4];
+    this.trackOffsets = [-6, 0, 8];
     this.finishLineDistance = 1000; // 终点线距离
     this.finished = []; // 已到达终点的火车
     this.gameOver = false;
