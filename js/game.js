@@ -123,6 +123,7 @@ export class GameManager {
     this.playerTrain.distance = 0;
     this.playerTrain.isFinished = false;
     this.playerTrain.trackIndex = 1;
+    this.playerTrain.currentSpeed = 40;
     this.sceneManager.addObject(this.playerTrain.getObject());
     
     // AI火车1 - 100节车厢
@@ -186,18 +187,20 @@ export class GameManager {
       if (this.playerTrain && !this.playerTrain.isFinished) {
         this.playerTrain.update(delta);
         
+        // 玩家火车始终在前方固定位置显示
         const playerTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, 1);
         this.playerTrain.getObject().position.x = playerTrackPos.x;
         this.playerTrain.getObject().position.y = playerTrackPos.y;
         this.playerTrain.getObject().position.z = 5;
         this.playerTrain.setRotation(playerTrackPos.direction);
         
+        // 玩家火车的 distance 每帧都增加，速度影响相对位置
+        const playerRelativeSpeed = this.playerTrain.currentSpeed - averageSpeed;
+        const playerRelativeMoveFactor = playerRelativeSpeed / 40;
+        this.playerTrain.distance += delta * 8 * playerRelativeMoveFactor;
+        
         if (this.isDriving) {
           this.checkDriveComplete();
-          
-          const relativeSpeed = this.playerTrain.currentSpeed - averageSpeed;
-          const relativeMoveFactor = relativeSpeed / 40;
-          this.playerTrain.distance += delta * 8 * relativeMoveFactor;
           
           if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
             this.playerTrain.decreaseSpeed(5);
@@ -233,10 +236,14 @@ export class GameManager {
           aiTrain.currentSpeed = aiTrain.targetSpeed;
         }
         
+        // 计算AI火车相对于玩家的位置
+        const distanceDiff = (aiTrain.distance || 0) - (this.playerTrain.distance || 0);
+        const relativeZ = 5 - distanceDiff * 0.2;
+        
         const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, aiTrain.trackIndex);
         aiTrain.getObject().position.x = aiTrackPos.x;
         aiTrain.getObject().position.y = aiTrackPos.y;
-        aiTrain.getObject().position.z = 5;
+        aiTrain.getObject().position.z = relativeZ;
         aiTrain.setRotation(aiTrackPos.direction);
         
         const relativeSpeed = aiTrain.currentSpeed - averageSpeed;
@@ -245,6 +252,25 @@ export class GameManager {
       });
       
       this.updateRaceUI();
+      
+      // 调试日志，每秒输出一次
+      if (!this._lastSpeedLog || Date.now() - this._lastSpeedLog > 1000) {
+        this._lastSpeedLog = Date.now();
+        console.log('游戏状态:', {
+          speed: {
+            player: Math.round(this.playerTrain.currentSpeed),
+            ai1: Math.round(this.aiTrains[0].currentSpeed),
+            ai2: Math.round(this.aiTrains[1].currentSpeed),
+            average: Math.round(averageSpeed)
+          },
+          distance: {
+            player: Math.round(this.playerTrain.distance),
+            ai1: Math.round(this.aiTrains[0].distance),
+            ai2: Math.round(this.aiTrains[1].distance)
+          },
+          isDriving: this.isDriving
+        });
+      }
       
       // 检测终点线
       this.checkFinishLine();
@@ -331,16 +357,7 @@ export class GameManager {
     
     this.ui.updateRaceUI(positions);
     
-    // 调试日志，每秒输出一次
-    if (!this._lastSpeedLog || Date.now() - this._lastSpeedLog > 1000) {
-      this._lastSpeedLog = Date.now();
-      console.log('速度状态:', {
-        player: Math.round(this.playerTrain.currentSpeed),
-        ai1: Math.round(this.aiTrains[0].currentSpeed),
-        ai2: Math.round(this.aiTrains[1].currentSpeed),
-        isDriving: this.isDriving
-      });
-    }
+    // 调试日志，每秒输出一次 - 移到动画循环里了
   }
 
   async showCurrentCharacter() {
