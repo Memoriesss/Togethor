@@ -311,6 +311,48 @@ body {
   color: #20B2AA;
 }
 
+.countdown-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, #FFE66D 0%, #FFA500 100%);
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.4);
+  border: 10px solid #FF4500;
+  z-index: 200;
+  pointer-events: none;
+}
+
+#countdown-text {
+  font-size: 10rem;
+  font-weight: bold;
+  color: #FF4500;
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+  animation: countPulse 0.5s ease-in-out;
+}
+
+.countdown-animate {
+  animation: countdownBounce 0.3s ease-out;
+}
+
+@keyframes countPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes countdownBounce {
+  0% { transform: translate(-50%, -50%) scale(0.8); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
 .question-ui {
   position: absolute;
   top: 18%;
@@ -596,5 +638,14 @@ body {
     width: 70px;
     height: 70px;
     font-size: 2.2rem;
+  }
+
+  .countdown-display {
+    width: 180px;
+    height: 180px;
+  }
+
+  #countdown-text {
+    font-size: 6rem;
   }
 }

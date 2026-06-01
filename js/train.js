@@ -15,6 +15,7 @@ export class Train {
     this.score = 0;
     this.positionZ = 0;
     
+    this.carCount = 6;
     this.createTrain(color);
   }
 
@@ -112,6 +113,109 @@ export class Train {
 
     bodyGroup.position.set(0, 0, 0);
     this.group.add(bodyGroup);
+
+    this.createCars(mainColor);
+  }
+
+  createCars(mainColor) {
+    const carLength = 4;
+    const gap = 0.2;
+    const startZ = 6;
+
+    for (let i = 0; i < this.carCount; i++) {
+      const carGroup = new THREE.Group();
+      const zPos = startZ + i * (carLength + gap);
+
+      const carBodyGeometry = new THREE.BoxGeometry(2.6, 1.8, carLength);
+      const carBodyMaterial = new THREE.MeshStandardMaterial({ 
+        color: mainColor,
+        roughness: 0.4,
+        metalness: 0.2
+      });
+      const carBody = new THREE.Mesh(carBodyGeometry, carBodyMaterial);
+      carBody.position.set(0, 0.9, zPos);
+      carBody.castShadow = true;
+      carBody.receiveShadow = true;
+      carGroup.add(carBody);
+
+      const roofGeometry = new THREE.BoxGeometry(2.7, 0.2, carLength + 0.2);
+      const roofMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x333333,
+        roughness: 0.3,
+        metalness: 0.6
+      });
+      const carRoof = new THREE.Mesh(roofGeometry, roofMaterial);
+      carRoof.position.set(0, 1.9, zPos);
+      carRoof.castShadow = true;
+      carGroup.add(carRoof);
+
+      const glassMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xAADDFF,
+        transparent: true,
+        opacity: 0.3,
+        roughness: 0.05,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      const windowGeometry = new THREE.BoxGeometry(0.08, 1, 1.5);
+      const leftWindow = new THREE.Mesh(windowGeometry, glassMaterial);
+      leftWindow.position.set(-1.31, 1.2, zPos);
+      carGroup.add(leftWindow);
+
+      const rightWindow = new THREE.Mesh(windowGeometry, glassMaterial);
+      rightWindow.position.set(1.31, 1.2, zPos);
+      carGroup.add(rightWindow);
+
+      const frontWindowGeometry = new THREE.BoxGeometry(2.4, 1, 0.08);
+      const frontWindow = new THREE.Mesh(frontWindowGeometry, glassMaterial);
+      frontWindow.position.set(0, 1.2, zPos + carLength / 2);
+      carGroup.add(frontWindow);
+
+      const wheelPositions = [
+        { x: -1, y: 0.45, z: zPos - 1.5 },
+        { x: 1, y: 0.45, z: zPos - 1.5 },
+        { x: -1, y: 0.45, z: zPos + 1.5 },
+        { x: 1, y: 0.45, z: zPos + 1.5 }
+      ];
+
+      const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.25, 20);
+      const wheelMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x1a1a1a,
+        roughness: 0.2,
+        metalness: 0.9
+      });
+
+      wheelPositions.forEach((pos) => {
+        const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(pos.x, pos.y, pos.z);
+        wheel.castShadow = true;
+        wheel.receiveShadow = true;
+        carGroup.add(wheel);
+        this.wheels.push(wheel);
+      });
+
+      const axleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+      const axleMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x3a3a3a,
+        roughness: 0.3,
+        metalness: 0.8
+      });
+
+      const axle1 = new THREE.Mesh(axleGeometry, axleMaterial);
+      axle1.rotation.z = Math.PI / 2;
+      axle1.position.set(0, 0.45, zPos - 1.5);
+      carGroup.add(axle1);
+
+      const axle2 = new THREE.Mesh(axleGeometry, axleMaterial);
+      axle2.rotation.z = Math.PI / 2;
+      axle2.position.set(0, 0.45, zPos + 1.5);
+      carGroup.add(axle2);
+
+      this.group.add(carGroup);
+    }
   }
 
   createSmokeSystem(parentGroup) {

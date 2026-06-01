@@ -32,7 +32,9 @@ export class UI extends EventEmitter {
       fireworks: document.getElementById('fireworks'),
       questionUI: document.getElementById('question-ui'),
       inputArea: document.querySelector('.input-area'),
-      racePanel: document.getElementById('race-panel')
+      racePanel: document.getElementById('race-panel'),
+      countdownDisplay: document.getElementById('countdown-display'),
+      countdownText: document.getElementById('countdown-text')
     };
   }
 
@@ -218,6 +220,32 @@ export class UI extends EventEmitter {
   hideInputArea() {
     if (this.elements.inputArea) {
       this.elements.inputArea.style.display = 'none';
+    }
+  }
+
+  showCountdown(count) {
+    if (this.elements.countdownDisplay) {
+      if (this.elements.countdownText) {
+        this.elements.countdownText.textContent = count;
+      }
+      this.elements.countdownDisplay.style.display = 'flex';
+      this.elements.countdownDisplay.classList.add('countdown-animate');
+    }
+  }
+
+  updateCountdown(count) {
+    if (this.elements.countdownDisplay && this.elements.countdownText) {
+      this.elements.countdownText.textContent = count;
+      
+      this.elements.countdownDisplay.classList.remove('countdown-animate');
+      void this.elements.countdownDisplay.offsetWidth;
+      this.elements.countdownDisplay.classList.add('countdown-animate');
+    }
+  }
+
+  hideCountdown() {
+    if (this.elements.countdownDisplay) {
+      this.elements.countdownDisplay.style.display = 'none';
     }
   }
 }
