@@ -11,7 +11,7 @@ export class SceneManager {
     this.trackSegments = [];
     this.decorations = [];
     this.animals = [];
-    this.isFirstPerson = true;
+    this.isFirstPerson = false;
     this.cameraGroup = new THREE.Group();
     this.animationFrameId = null;
     this.animationCallback = null;
@@ -47,12 +47,12 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    this.generateTrackCurve();
+    this.generateTrackLine();
     this.addLights();
-    this.createTrack();
+    this.createTrackFromLine();
     this.createSlopes();
-    this.addEnvironment();
-    this.addAnimals();
+    this.addDecorationsAroundTrack();
+    this.addAnimalsAroundTrack();
     this.setupCamera();
 
     window.addEventListener('resize', () => this.onResize());
@@ -82,7 +82,6 @@ export class SceneManager {
   setupCamera() {
     this.cameraOffset = { x: 0, y: 8, z: 18 };
     this.cameraLookOffset = { x: 0, y: 0, z: -10 };
-    this.isFirstPerson = false;
     this.updateCameraPosition();
   }
 
@@ -112,31 +111,31 @@ export class SceneManager {
     this.updateCameraPosition();
   }
 
-  generateTrackCurve() {
+  generateTrackLine() {
     this.trackCurve = [];
     let currentX = 0;
     let currentY = 0;
     let direction = 0;
     
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 500; i++) {
       const segmentType = Math.random();
       
-      if (segmentType < 0.2) {
-        direction += (Math.random() - 0.5) * 0.08;
-      } else if (segmentType < 0.35) {
-        direction += 0.05;
-      } else if (segmentType < 0.5) {
-        direction -= 0.05;
+      if (segmentType < 0.25) {
+        direction += (Math.random() - 0.5) * 0.06;
+      } else if (segmentType < 0.4) {
+        direction += 0.04;
+      } else if (segmentType < 0.55) {
+        direction -= 0.04;
       }
       
-      direction = Math.max(-0.3, Math.min(0.3, direction));
+      direction = Math.max(-0.25, Math.min(0.25, direction));
       
       currentX += direction * 2;
-      currentX = Math.max(-12, Math.min(12, currentX));
+      currentX = Math.max(-10, Math.min(10, currentX));
       
-      const slopeChange = Math.random() < 0.1 ? (Math.random() - 0.5) * 1.5 : 0;
+      const slopeChange = Math.random() < 0.08 ? (Math.random() - 0.5) * 1.2 : 0;
       currentY += slopeChange;
-      currentY = Math.max(-3, Math.min(6, currentY));
+      currentY = Math.max(-2.5, Math.min(5, currentY));
       
       this.trackCurve.push({
         x: currentX,
@@ -147,25 +146,25 @@ export class SceneManager {
     }
   }
 
-  createTrack() {
+  createTrackFromLine() {
     for (let i = 0; i < 500; i++) {
+      const curveIndex = i % this.trackCurve.length;
+      const curveData = this.trackCurve[curveIndex];
+      
       for (let trackIndex = 0; trackIndex < 3; trackIndex++) {
-        this.addTrackSegment(i, trackIndex);
+        this.addTrackSegment(i, trackIndex, curveData);
       }
     }
   }
 
-  addTrackSegment(i, trackIndex) {
-    const curveIndex = i % this.trackCurve.length;
-    const curveData = this.trackCurve[curveIndex];
-    
+  addTrackSegment(i, trackIndex, curveData) {
     const offsetX = this.trackOffsets[trackIndex];
     const baseX = curveData ? curveData.x : 0;
     const baseY = curveData ? curveData.y : 0;
     const curveX = baseX + offsetX;
     const curveY = baseY;
 
-    const sleeperGeometry = new THREE.BoxGeometry(3.5, 0.2, 0.4);
+    const sleeperGeometry = new THREE.BoxGeometry(3.5, 0.2, 0.5);
     const sleeperMaterial = new THREE.MeshStandardMaterial({
       color: 0x5D4037,
       roughness: 0.8
@@ -205,18 +204,18 @@ export class SceneManager {
   createSlopes() {
     const slopeTypes = ['up', 'down', 'hill', 'valley'];
     
-    for (let i = 0; i < 30; i++) {
-      const startZ = -i * 30 - 50;
+    for (let i = 0; i < 25; i++) {
+      const startZ = -i * 40 - 60;
       const slopeType = slopeTypes[Math.floor(Math.random() * slopeTypes.length)];
-      const width = 8 + Math.random() * 8;
-      const height = 2 + Math.random() * 4;
+      const width = 10 + Math.random() * 10;
+      const height = 2.5 + Math.random() * 4.5;
       
       this.createSlopeSegment(startZ, width, height, slopeType);
     }
   }
 
   createSlopeSegment(startZ, width, height, type) {
-    const slopeGeometry = new THREE.PlaneGeometry(width * 2, 30);
+    const slopeGeometry = new THREE.PlaneGeometry(width * 2, 35);
     const slopeMaterial = new THREE.MeshStandardMaterial({
       color: type === 'hill' ? 0x8B7355 : type === 'valley' ? 0x654321 : 0x6B8E23,
       roughness: 0.9,
@@ -227,10 +226,10 @@ export class SceneManager {
     
     if (type === 'up') {
       slope.rotation.x = -Math.PI / 4;
-      slope.position.set(25, height / 2, startZ);
+      slope.position.set(28, height / 2, startZ);
     } else if (type === 'down') {
       slope.rotation.x = Math.PI / 4;
-      slope.position.set(25, -height / 2, startZ);
+      slope.position.set(28, -height / 2, startZ);
     } else if (type === 'hill') {
       const hillGeometry = new THREE.ConeGeometry(width, height * 2, 16);
       const hillMaterial = new THREE.MeshStandardMaterial({
@@ -238,7 +237,7 @@ export class SceneManager {
         roughness: 0.9
       });
       const hill = new THREE.Mesh(hillGeometry, hillMaterial);
-      hill.position.set(25, height, startZ);
+      hill.position.set(28, height, startZ);
       hill.castShadow = true;
       hill.receiveShadow = true;
       this.scene.add(hill);
@@ -257,7 +256,7 @@ export class SceneManager {
       });
       const valley = new THREE.Mesh(valleyGeometry, valleyMaterial);
       valley.rotation.x = Math.PI;
-      valley.position.set(25, -height, startZ);
+      valley.position.set(28, -height, startZ);
       valley.castShadow = true;
       valley.receiveShadow = true;
       this.scene.add(valley);
@@ -281,7 +280,7 @@ export class SceneManager {
     });
   }
 
-  addEnvironment() {
+  addDecorationsAroundTrack() {
     const groundGeometry = new THREE.PlaneGeometry(500, 1500);
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x228B22,
@@ -296,18 +295,19 @@ export class SceneManager {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    for (let i = 0; i < 100; i++) {
-      this.addDecoration(i);
+    for (let i = 0; i < 120; i++) {
+      this.addDecorationAroundTrack(i);
     }
   }
 
-  addDecoration(i) {
-    const z = -i * 12 - 30;
-    const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (18 + Math.random() * 22);
-    
+  addDecorationAroundTrack(i) {
+    const z = -i * 10 - 25;
     const curveIndex = Math.floor((Math.abs(z) / 2) % this.trackCurve.length);
     const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+    
+    const side = Math.random() > 0.5 ? 1 : -1;
+    const distance = 12 + Math.random() * 25;
+    const x = curveData.x + side * distance;
 
     const decorationType = Math.floor(Math.random() * 6);
     
@@ -505,16 +505,20 @@ export class SceneManager {
     return group;
   }
 
-  addAnimals() {
-    for (let i = 0; i < 20; i++) {
-      this.addAnimal(i);
+  addAnimalsAroundTrack() {
+    for (let i = 0; i < 25; i++) {
+      this.addAnimalAroundTrack(i);
     }
   }
 
-  addAnimal(i) {
-    const z = -i * 25 - 50;
+  addAnimalAroundTrack(i) {
+    const z = -i * 22 - 45;
+    const curveIndex = Math.floor((Math.abs(z) / 2) % this.trackCurve.length);
+    const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+    
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (10 + Math.random() * 15);
+    const distance = 8 + Math.random() * 18;
+    const x = curveData.x + side * distance;
 
     const animalType = Math.floor(Math.random() * 3);
     let animal;
@@ -678,7 +682,7 @@ export class SceneManager {
   updateSceneObjects(moveDistance) {
     this.trackSegments.forEach(segment => {
       segment.position.z += moveDistance;
-      if (segment.position.z > 50) {
+      if (segment.position.z > 60) {
         segment.position.z -= 1000;
         
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
@@ -690,14 +694,14 @@ export class SceneManager {
 
     this.slopeSegments.forEach(slope => {
       slope.mesh.position.z += moveDistance;
-      if (slope.mesh.position.z > 50) {
+      if (slope.mesh.position.z > 60) {
         slope.mesh.position.z -= 1000;
       }
     });
 
     this.decorations.forEach(decoration => {
       decoration.position.z += moveDistance;
-      if (decoration.position.z > 50) {
+      if (decoration.position.z > 60) {
         decoration.position.z -= 1000;
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
@@ -716,7 +720,7 @@ export class SceneManager {
         (animal.position.z - 5) ** 2
       );
       
-      if (distanceToTrain < 25 && animal.position.z > -15 && animal.position.z < 25) {
+      if (distanceToTrain < 28 && animal.position.z > -18 && animal.position.z < 28) {
         animal.userData.state = 'attracted';
         
         const targetX = (Math.random() - 0.5) * 6;
@@ -738,7 +742,7 @@ export class SceneManager {
         animal.rotation.y = Math.sin(animal.userData.animationTime * 0.5) * 0.3;
       }
       
-      if (animal.position.z > 40) {
+      if (animal.position.z > 50) {
         animal.position.z -= 1000;
       }
     });
@@ -753,7 +757,7 @@ export class SceneManager {
 
     this.trackSegments.forEach(segment => {
       segment.position.z += moveDistance;
-      if (segment.position.z > 50) {
+      if (segment.position.z > 60) {
         segment.position.z -= 1000;
         
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
@@ -765,14 +769,14 @@ export class SceneManager {
 
     this.slopeSegments.forEach(slope => {
       slope.mesh.position.z += moveDistance;
-      if (slope.mesh.position.z > 50) {
+      if (slope.mesh.position.z > 60) {
         slope.mesh.position.z -= 1000;
       }
     });
 
     this.decorations.forEach(decoration => {
       decoration.position.z += moveDistance;
-      if (decoration.position.z > 50) {
+      if (decoration.position.z > 60) {
         decoration.position.z -= 1000;
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
