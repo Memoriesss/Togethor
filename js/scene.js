@@ -15,7 +15,7 @@ export class SceneManager {
     this.cameraGroup = new THREE.Group();
     this.animationFrameId = null;
     this.animationCallback = null;
-    this.trackOffsets = [-4, 0, 4];
+    this.trackOffsets = [-6, 0, 12];
     this.totalDistance = 0;
     
     this.trackCurve = [];
