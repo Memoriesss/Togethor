@@ -176,9 +176,9 @@ export class SceneManager {
   }
 
   addDecoration(i) {
-    const z = -i * 15 - 30;
+    const z = -i * 12 - 20;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (8 + Math.random() * 25);
+    const x = side * (10 + Math.random() * 30);
 
     const themeConfig = this.themes[this.currentTheme];
     const decorationType = Math.floor(Math.random() * 6);
@@ -345,9 +345,9 @@ export class SceneManager {
   }
 
   addAnimal(i) {
-    const z = -i * 40 - 100;
+    const z = -i * 30 - 50;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (12 + Math.random() * 20);
+    const x = side * (15 + Math.random() * 25);
     
     const animalTypes = ['bunny', 'chick', 'sheep', 'pig'];
     const type = animalTypes[Math.floor(Math.random() * animalTypes.length)];
@@ -567,10 +567,16 @@ export class SceneManager {
 
     this.trackSegments.forEach(segment => {
       segment.position.z += moveDistance;
+      if (segment.position.z > 50) {
+        segment.position.z -= 500;
+      }
     });
 
     this.decorations.forEach(decoration => {
       decoration.position.z += moveDistance;
+      if (decoration.position.z > 50) {
+        decoration.position.z -= 500;
+      }
     });
 
     this.animals.forEach(animal => {
@@ -579,14 +585,14 @@ export class SceneManager {
       
       const distanceToTrain = Math.sqrt(
         (animal.position.x) ** 2 + 
-        (animal.position.z - 2) ** 2
+        (animal.position.z) ** 2
       );
       
-      if (distanceToTrain < 20 && Math.abs(animal.position.z - 2) < 15) {
+      if (distanceToTrain < 25 && animal.position.z > -20 && animal.position.z < 20) {
         animal.userData.state = 'attracted';
         
-        const targetX = (Math.random() - 0.5) * 8;
-        const targetZ = animal.position.z + (Math.random() - 0.5) * 2;
+        const targetX = (Math.random() - 0.5) * 6;
+        const targetZ = animal.position.z + (Math.random() - 0.5) * 3;
         
         const dx = targetX - animal.position.x;
         const dz = targetZ - animal.position.z;
@@ -594,50 +600,20 @@ export class SceneManager {
         
         if (dist > 0.5) {
           animal.position.x += (dx / dist) * animal.userData.moveSpeed;
-          animal.position.z += (dz / dist) * animal.userData.moveSpeed * 0.5;
         }
         
-        animal.position.y = 0.1 * Math.abs(Math.sin(animal.userData.animationTime * 4)) + 0.01;
+        animal.position.y = 0.15 * Math.abs(Math.sin(animal.userData.animationTime * 5)) + 0.01;
         animal.rotation.y = Math.atan2(dx, dz);
       } else {
         animal.userData.state = 'idle';
         animal.position.y = 0.05 * Math.sin(animal.userData.animationTime * 2);
         animal.rotation.y = Math.sin(animal.userData.animationTime * 0.5) * 0.3;
       }
-    });
-
-    this.worldOffset += moveDistance;
-
-    this.trackSegments = this.trackSegments.filter(segment => {
-      if (segment.position.z > 40) {
-        this.scene.remove(segment);
-        return false;
+      
+      if (animal.position.z > 30) {
+        animal.position.z -= 500;
+        animal.position.x = (Math.random() - 0.5) * 40;
       }
-      if (segment.position.z < -250 && this.trackSegments.length < 200) {
-        this.addTrackSegment(Math.floor((this.worldOffset - 150) / 2.2) + Math.floor(Math.random() * 10));
-      }
-      return true;
-    });
-
-    this.animals = this.animals.filter(animal => {
-      if (animal.position.z > 50) {
-        this.scene.remove(animal);
-        const newZ = -200 - Math.random() * 100;
-        this.addAnimal(Math.floor(Math.abs(newZ) / 40));
-        return false;
-      }
-      return true;
-    });
-
-    this.decorations = this.decorations.filter(dec => {
-      if (dec.position.z > 50) {
-        this.scene.remove(dec);
-        return false;
-      }
-      if (dec.position.z < -300 && this.decorations.length < 100) {
-        this.addDecoration(Math.floor(Math.random() * 100));
-      }
-      return true;
     });
   }
 
