@@ -80,20 +80,36 @@ export class SceneManager {
   }
 
   setupCamera() {
-    this.camera.position.set(0, 5, 15);
-    this.camera.lookAt(0, 0, 0);
+    this.cameraOffset = { x: 0, y: 8, z: 18 };
+    this.cameraLookOffset = { x: 0, y: 0, z: -10 };
     this.isFirstPerson = false;
+    this.updateCameraPosition();
+  }
+
+  updateCameraPosition() {
+    const trackPos = this.getTrackPosition(this.totalDistance);
+    this.camera.position.set(
+      trackPos.x + this.cameraOffset.x,
+      trackPos.y + this.cameraOffset.y,
+      5 + this.cameraOffset.z
+    );
+    this.camera.lookAt(
+      trackPos.x + this.cameraLookOffset.x,
+      trackPos.y + this.cameraLookOffset.y,
+      5 + this.cameraLookOffset.z
+    );
   }
 
   toggleView() {
     this.isFirstPerson = !this.isFirstPerson;
     if (this.isFirstPerson) {
-      this.camera.position.set(0, 2.5, 3);
-      this.camera.lookAt(0, 2.2, -5);
+      this.cameraOffset = { x: 0, y: 1, z: 3 };
+      this.cameraLookOffset = { x: 0, y: 0.5, z: -15 };
     } else {
-      this.camera.position.set(0, 12, 20);
-      this.camera.lookAt(0, 0, 0);
+      this.cameraOffset = { x: 0, y: 8, z: 18 };
+      this.cameraLookOffset = { x: 0, y: 0, z: -10 };
     }
+    this.updateCameraPosition();
   }
 
   generateTrackCurve() {
@@ -659,6 +675,74 @@ export class SceneManager {
     this.isMoving = false;
   }
 
+  updateSceneObjects(moveDistance) {
+    this.trackSegments.forEach(segment => {
+      segment.position.z += moveDistance;
+      if (segment.position.z > 50) {
+        segment.position.z -= 1000;
+        
+        const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
+        const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+        segment.position.x = segment.userData.baseX + curveData.x;
+        segment.position.y = segment.userData.baseY + curveData.y;
+      }
+    });
+
+    this.slopeSegments.forEach(slope => {
+      slope.mesh.position.z += moveDistance;
+      if (slope.mesh.position.z > 50) {
+        slope.mesh.position.z -= 1000;
+      }
+    });
+
+    this.decorations.forEach(decoration => {
+      decoration.position.z += moveDistance;
+      if (decoration.position.z > 50) {
+        decoration.position.z -= 1000;
+        
+        const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
+        const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+        decoration.position.y = decoration.userData.baseY + curveData.y;
+      }
+    });
+
+    this.animals.forEach(animal => {
+      animal.position.z += moveDistance;
+      animal.userData.animationTime += 0.016;
+      
+      const distanceToTrain = Math.sqrt(
+        (animal.position.x) ** 2 + 
+        (animal.position.z - 5) ** 2
+      );
+      
+      if (distanceToTrain < 25 && animal.position.z > -15 && animal.position.z < 25) {
+        animal.userData.state = 'attracted';
+        
+        const targetX = (Math.random() - 0.5) * 6;
+        const targetZ = animal.position.z + (Math.random() - 0.5) * 2;
+        
+        const dx = targetX - animal.position.x;
+        const dz = targetZ - animal.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        
+        if (dist > 0.5) {
+          animal.position.x += (dx / dist) * animal.userData.moveSpeed;
+        }
+        
+        animal.position.y = 0.15 * Math.abs(Math.sin(animal.userData.animationTime * 5)) + 0.01;
+        animal.rotation.y = Math.atan2(dx, dz);
+      } else {
+        animal.userData.state = 'idle';
+        animal.position.y = 0.05 * Math.sin(animal.userData.animationTime * 2);
+        animal.rotation.y = Math.sin(animal.userData.animationTime * 0.5) * 0.3;
+      }
+      
+      if (animal.position.z > 40) {
+        animal.position.z -= 1000;
+      }
+    });
+  }
+
   update(delta, averageSpeed) {
     if (averageSpeed === undefined) {
       averageSpeed = 40;
@@ -762,6 +846,16 @@ export class SceneManager {
 
   removeObject(object) {
     this.scene.remove(object);
+  }
+
+  getTrackPosition(distance) {
+    const segmentIndex = Math.floor(distance / 2) % this.trackCurve.length;
+    const curveData = this.trackCurve[segmentIndex] || { x: 0, y: 0 };
+    return {
+      x: curveData.x,
+      y: curveData.y,
+      direction: curveData.direction || 0
+    };
   }
 
   onResize() {

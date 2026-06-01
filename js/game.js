@@ -142,10 +142,22 @@ export class GameManager {
       const allTrains = [this.playerTrain, ...this.aiTrains];
       const averageSpeed = allTrains.reduce((sum, t) => sum + t.currentSpeed, 0) / allTrains.length;
       
-      this.sceneManager.update(delta, this.isDriving ? averageSpeed : 0);
+      const moveDistance = this.isDriving ? (averageSpeed / 40 * 0.8 * 60 * 1/60) : 0;
+      
+      if (this.isDriving) {
+        this.sceneManager.totalDistance += moveDistance;
+      }
+      
+      this.sceneManager.updateSceneObjects(moveDistance);
+      this.sceneManager.updateCameraPosition();
       
       if (this.playerTrain) {
         this.playerTrain.update(delta);
+        
+        const playerTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
+        this.playerTrain.getObject().position.x = playerTrackPos.x + this.trackOffsets[1];
+        this.playerTrain.getObject().position.y = playerTrackPos.y;
+        this.playerTrain.getObject().position.z = 5;
         
         if (this.isDriving) {
           this.checkDriveComplete();
@@ -153,8 +165,6 @@ export class GameManager {
           const relativeSpeed = this.playerTrain.currentSpeed - averageSpeed;
           const relativeMoveFactor = relativeSpeed / 40;
           this.playerTrain.distance += delta * 8 * relativeMoveFactor;
-          
-          this.playerTrain.getObject().position.z = this.playerTrain.distance % 100;
           
           if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
             this.playerTrain.decreaseSpeed(5);
@@ -172,11 +182,14 @@ export class GameManager {
           aiTrain.currentSpeed = 35 + Math.random() * 15;
         }
         
+        const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
+        aiTrain.getObject().position.x = aiTrackPos.x + this.trackOffsets[index];
+        aiTrain.getObject().position.y = aiTrackPos.y;
+        aiTrain.getObject().position.z = 5;
+        
         const relativeSpeed = aiTrain.currentSpeed - averageSpeed;
         const relativeMoveFactor = relativeSpeed / 40;
         aiTrain.distance += delta * 8 * relativeMoveFactor;
-        
-        aiTrain.getObject().position.z = aiTrain.distance % 100;
       });
       
       this.updateRaceUI();
