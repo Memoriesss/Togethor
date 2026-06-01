@@ -20,7 +20,6 @@ export class SceneManager {
     
     this.trackCurve = [];
     this.currentCurveIndex = 0;
-    this.slopeSegments = [];
     this.finishLineGroup = null;
     this.finishLineDistance = 0;
 
@@ -52,7 +51,6 @@ export class SceneManager {
     this.generateTrackLine();
     this.addLights();
     this.createTrackFromLine();
-    this.createSlopes();
     this.addDecorationsAroundTrack();
     this.addAnimalsAroundTrack();
     this.setupCamera();
@@ -91,12 +89,12 @@ export class SceneManager {
     const trackPos = this.getTrackPosition(this.totalDistance);
     this.camera.position.set(
       trackPos.x + this.cameraOffset.x,
-      trackPos.y + this.cameraOffset.y,
+      this.cameraOffset.y,
       5 + this.cameraOffset.z
     );
     this.camera.lookAt(
       trackPos.x + this.cameraLookOffset.x,
-      trackPos.y + this.cameraLookOffset.y,
+      this.cameraLookOffset.y,
       5 + this.cameraLookOffset.z
     );
   }
@@ -116,7 +114,6 @@ export class SceneManager {
   generateTrackLine() {
     this.trackCurve = [];
     let currentX = 0;
-    let currentY = 0;
     let direction = 0;
     
     for (let i = 0; i < 500; i++) {
@@ -135,15 +132,10 @@ export class SceneManager {
       currentX += direction * 2;
       currentX = Math.max(-10, Math.min(10, currentX));
       
-      const slopeChange = Math.random() < 0.08 ? (Math.random() - 0.5) * 1.2 : 0;
-      currentY += slopeChange;
-      currentY = Math.max(-2.5, Math.min(5, currentY));
-      
       this.trackCurve.push({
         x: currentX,
-        y: currentY,
-        direction: direction,
-        slopeChange: slopeChange
+        y: 0,
+        direction: direction
       });
     }
   }
@@ -162,9 +154,7 @@ export class SceneManager {
   addTrackSegment(i, trackIndex, curveData) {
     const offsetX = this.trackOffsets[trackIndex];
     const baseX = curveData ? curveData.x : 0;
-    const baseY = curveData ? curveData.y : 0;
     const curveX = baseX + offsetX;
-    const curveY = baseY;
 
     const sleeperGeometry = new THREE.BoxGeometry(3.5, 0.2, 0.5);
     const sleeperMaterial = new THREE.MeshStandardMaterial({
@@ -172,10 +162,10 @@ export class SceneManager {
       roughness: 0.8
     });
     const sleeper = new THREE.Mesh(sleeperGeometry, sleeperMaterial);
-    sleeper.position.set(curveX, curveY - 0.8, -i * 2);
+    sleeper.position.set(curveX, -0.8, -i * 2);
     sleeper.castShadow = true;
     sleeper.receiveShadow = true;
-    sleeper.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
+    sleeper.userData = { trackIndex, baseX: curveX, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(sleeper);
     this.trackSegments.push(sleeper);
 
@@ -187,99 +177,20 @@ export class SceneManager {
     });
 
     const railLeft = new THREE.Mesh(railGeometry, railMaterial);
-    railLeft.position.set(curveX - 0.6, curveY - 0.65, -i * 2);
+    railLeft.position.set(curveX - 0.6, -0.65, -i * 2);
     railLeft.castShadow = true;
     railLeft.receiveShadow = true;
-    railLeft.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
+    railLeft.userData = { trackIndex, baseX: curveX, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(railLeft);
     this.trackSegments.push(railLeft);
 
     const railRight = new THREE.Mesh(railGeometry, railMaterial);
-    railRight.position.set(curveX + 0.6, curveY - 0.65, -i * 2);
+    railRight.position.set(curveX + 0.6, -0.65, -i * 2);
     railRight.castShadow = true;
     railRight.receiveShadow = true;
-    railRight.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
+    railRight.userData = { trackIndex, baseX: curveX, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(railRight);
     this.trackSegments.push(railRight);
-  }
-
-  createSlopes() {
-    const slopeTypes = ['up', 'down', 'hill', 'valley'];
-    
-    for (let i = 0; i < 25; i++) {
-      const startZ = -i * 40 - 60;
-      const slopeType = slopeTypes[Math.floor(Math.random() * slopeTypes.length)];
-      const width = 10 + Math.random() * 10;
-      const height = 2.5 + Math.random() * 4.5;
-      
-      this.createSlopeSegment(startZ, width, height, slopeType);
-    }
-  }
-
-  createSlopeSegment(startZ, width, height, type) {
-    const slopeGeometry = new THREE.PlaneGeometry(width * 2, 35);
-    const slopeMaterial = new THREE.MeshStandardMaterial({
-      color: type === 'hill' ? 0x8B7355 : type === 'valley' ? 0x654321 : 0x6B8E23,
-      roughness: 0.9,
-      side: THREE.DoubleSide
-    });
-    
-    const slope = new THREE.Mesh(slopeGeometry, slopeMaterial);
-    
-    if (type === 'up') {
-      slope.rotation.x = -Math.PI / 4;
-      slope.position.set(28, height / 2, startZ);
-    } else if (type === 'down') {
-      slope.rotation.x = Math.PI / 4;
-      slope.position.set(28, -height / 2, startZ);
-    } else if (type === 'hill') {
-      const hillGeometry = new THREE.ConeGeometry(width, height * 2, 16);
-      const hillMaterial = new THREE.MeshStandardMaterial({
-        color: 0x228B22,
-        roughness: 0.9
-      });
-      const hill = new THREE.Mesh(hillGeometry, hillMaterial);
-      hill.position.set(28, height, startZ);
-      hill.castShadow = true;
-      hill.receiveShadow = true;
-      this.scene.add(hill);
-      
-      this.slopeSegments.push({
-        type: 'hill',
-        mesh: hill,
-        startZ: startZ
-      });
-      return;
-    } else if (type === 'valley') {
-      const valleyGeometry = new THREE.ConeGeometry(width, height * 2, 16);
-      const valleyMaterial = new THREE.MeshStandardMaterial({
-        color: 0x1E90FF,
-        roughness: 0.9
-      });
-      const valley = new THREE.Mesh(valleyGeometry, valleyMaterial);
-      valley.rotation.x = Math.PI;
-      valley.position.set(28, -height, startZ);
-      valley.castShadow = true;
-      valley.receiveShadow = true;
-      this.scene.add(valley);
-      
-      this.slopeSegments.push({
-        type: 'valley',
-        mesh: valley,
-        startZ: startZ
-      });
-      return;
-    }
-    
-    slope.castShadow = true;
-    slope.receiveShadow = true;
-    this.scene.add(slope);
-    
-    this.slopeSegments.push({
-      type: type,
-      mesh: slope,
-      startZ: startZ
-    });
   }
 
   addDecorationsAroundTrack() {
@@ -337,10 +248,10 @@ export class SceneManager {
     }
 
     if (decoration) {
-      decoration.position.set(x, curveData.y, z);
+      decoration.position.set(x, 0, z);
       decoration.castShadow = true;
       decoration.receiveShadow = true;
-      decoration.userData = { isDecoration: true, baseZ: z, baseY: curveData.y, baseX: x };
+      decoration.userData = { isDecoration: true, baseZ: z, baseX: x };
       this.scene.add(decoration);
       this.decorations.push(decoration);
     }
@@ -561,7 +472,7 @@ export class SceneManager {
     const bodyGeo = new THREE.SphereGeometry(0.4, 16, 16);
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.7 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.scale.set(1, 0.9, 1.3);
+    body.scale.set(1, 0.9, 1.4);
     body.position.y = 0.4;
     group.add(body);
     
@@ -690,14 +601,7 @@ export class SceneManager {
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
         segment.position.x = curveData.x + segment.userData.originalOffsetX;
-        segment.position.y = curveData.y - 0.8;
-      }
-    });
-
-    this.slopeSegments.forEach(slope => {
-      slope.mesh.position.z += moveDistance;
-      if (slope.mesh.position.z > 60) {
-        slope.mesh.position.z -= 1000;
+        segment.position.y = -0.8;
       }
     });
 
@@ -708,7 +612,7 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        decoration.position.y = curveData.y;
+        decoration.position.y = 0;
         decoration.position.x = decoration.userData.baseX;
       }
     });
@@ -770,14 +674,7 @@ export class SceneManager {
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
         segment.position.x = curveData.x + segment.userData.originalOffsetX;
-        segment.position.y = curveData.y - 0.8;
-      }
-    });
-
-    this.slopeSegments.forEach(slope => {
-      slope.mesh.position.z += moveDistance;
-      if (slope.mesh.position.z > 60) {
-        slope.mesh.position.z -= 1000;
+        segment.position.y = -0.8;
       }
     });
 
@@ -788,7 +685,7 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        decoration.position.y = curveData.y;
+        decoration.position.y = 0;
         decoration.position.x = decoration.userData.baseX;
       }
     });
@@ -871,7 +768,7 @@ export class SceneManager {
     const curveData = this.trackCurve[segmentIndex] || { x: 0, y: 0 };
     return {
       x: curveData.x,
-      y: curveData.y,
+      y: 0,
       direction: curveData.direction || 0
     };
   }
@@ -901,11 +798,6 @@ export class SceneManager {
     });
     this.animals = [];
     
-    this.slopeSegments.forEach(slope => {
-      this.scene.remove(slope.mesh);
-    });
-    this.slopeSegments = [];
-    
     if (this.finishLineGroup) {
       this.scene.remove(this.finishLineGroup);
     }
@@ -915,20 +807,16 @@ export class SceneManager {
     this.finishLineDistance = distance;
     this.finishLineGroup = new THREE.Group();
     
-    // 创建终点线横幅
-    const bannerWidth = 20;
-    const bannerHeight = 8;
-    
     // 创建黑白条纹的地面
     const stripeCount = 20;
     for (let i = 0; i < stripeCount; i++) {
-      const stripeGeo = new THREE.BoxGeometry(2, 0.2, bannerWidth / stripeCount);
+      const stripeGeo = new THREE.BoxGeometry(2, 0.2, 20 / stripeCount);
       const stripeMat = new THREE.MeshStandardMaterial({
         color: i % 2 === 0 ? 0xFFFFFF : 0x000000,
         roughness: 0.9
       });
       const stripe = new THREE.Mesh(stripeGeo, stripeMat);
-      stripe.position.set(0, -0.9, -distance - (i - stripeCount/2) * (bannerWidth / stripeCount));
+      stripe.position.set(0, -0.9, -distance - (i - stripeCount / 2) * (20 / stripeCount));
       stripe.receiveShadow = true;
       this.finishLineGroup.add(stripe);
     }
