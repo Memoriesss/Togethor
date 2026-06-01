@@ -204,8 +204,10 @@ export class GameManager {
             this.lastSpeedDecrease = now;
           }
         } else {
-          // 非行驶状态下也缓慢减少速度，保持游戏平衡
-          this.playerTrain.decreaseSpeed(delta * 0.5);
+          // 非行驶状态下速度减少，但不低于基础速度30
+          if (this.playerTrain.currentSpeed > 30) {
+            this.playerTrain.decreaseSpeed(delta * 3);
+          }
         }
       }
       
@@ -214,7 +216,7 @@ export class GameManager {
         
         aiTrain.update(delta);
         
-        // AI速度每2秒变化一次，更频繁
+        // AI速度每2秒变化一次
         aiTrain.speedChangeTimer += delta;
         
         if (aiTrain.speedChangeTimer > 2) {
@@ -223,8 +225,12 @@ export class GameManager {
         }
         
         const speedDiff = aiTrain.targetSpeed - aiTrain.currentSpeed;
-        // AI速度调整更平缓
-        aiTrain.currentSpeed += speedDiff * delta * 1.0;
+        // AI速度平滑调整，每次最多变化2
+        if (Math.abs(speedDiff) > 0.5) {
+          aiTrain.currentSpeed += Math.sign(speedDiff) * 2 * delta;
+        } else {
+          aiTrain.currentSpeed = aiTrain.targetSpeed;
+        }
         
         const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, aiTrain.trackIndex);
         aiTrain.getObject().position.x = aiTrackPos.x;
@@ -323,6 +329,17 @@ export class GameManager {
     positions.sort((a, b) => b.z - a.z);
     
     this.ui.updateRaceUI(positions);
+    
+    // 调试日志，每秒输出一次
+    if (!this._lastSpeedLog || Date.now() - this._lastSpeedLog > 1000) {
+      this._lastSpeedLog = Date.now();
+      console.log('速度状态:', {
+        player: Math.round(this.playerTrain.currentSpeed),
+        ai1: Math.round(this.aiTrains[0].currentSpeed),
+        ai2: Math.round(this.aiTrains[1].currentSpeed),
+        isDriving: this.isDriving
+      });
+    }
   }
 
   async showCurrentCharacter() {
