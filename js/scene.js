@@ -118,25 +118,25 @@ export class SceneManager {
     let currentY = 0;
     let direction = 0;
     
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 200; i++) {
       const segmentType = Math.random();
       
-      if (segmentType < 0.25) {
-        direction += (Math.random() - 0.5) * 0.15;
-      } else if (segmentType < 0.4) {
-        direction += 0.08;
-      } else if (segmentType < 0.55) {
-        direction -= 0.08;
+      if (segmentType < 0.2) {
+        direction += (Math.random() - 0.5) * 0.08;
+      } else if (segmentType < 0.35) {
+        direction += 0.05;
+      } else if (segmentType < 0.5) {
+        direction -= 0.05;
       }
       
-      direction = Math.max(-0.5, Math.min(0.5, direction));
+      direction = Math.max(-0.3, Math.min(0.3, direction));
       
       currentX += direction * 2;
-      currentX = Math.max(-15, Math.min(15, currentX));
+      currentX = Math.max(-12, Math.min(12, currentX));
       
-      const slopeChange = Math.random() < 0.15 ? (Math.random() - 0.5) * 3 : 0;
+      const slopeChange = Math.random() < 0.1 ? (Math.random() - 0.5) * 1.5 : 0;
       currentY += slopeChange;
-      currentY = Math.max(-5, Math.min(10, currentY));
+      currentY = Math.max(-3, Math.min(6, currentY));
       
       this.trackCurve.push({
         x: currentX,
@@ -174,7 +174,7 @@ export class SceneManager {
     sleeper.position.set(curveX, curveY - 0.8, -i * 2);
     sleeper.castShadow = true;
     sleeper.receiveShadow = true;
-    sleeper.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
+    sleeper.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(sleeper);
     this.trackSegments.push(sleeper);
 
@@ -189,7 +189,7 @@ export class SceneManager {
     railLeft.position.set(curveX - 0.6, curveY - 0.65, -i * 2);
     railLeft.castShadow = true;
     railLeft.receiveShadow = true;
-    railLeft.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
+    railLeft.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(railLeft);
     this.trackSegments.push(railLeft);
 
@@ -197,7 +197,7 @@ export class SceneManager {
     railRight.position.set(curveX + 0.6, curveY - 0.65, -i * 2);
     railRight.castShadow = true;
     railRight.receiveShadow = true;
-    railRight.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
+    railRight.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i, originalOffsetX: offsetX };
     this.scene.add(railRight);
     this.trackSegments.push(railRight);
   }
@@ -227,10 +227,10 @@ export class SceneManager {
     
     if (type === 'up') {
       slope.rotation.x = -Math.PI / 4;
-      slope.position.set(20, height / 2, startZ);
+      slope.position.set(25, height / 2, startZ);
     } else if (type === 'down') {
       slope.rotation.x = Math.PI / 4;
-      slope.position.set(20, -height / 2, startZ);
+      slope.position.set(25, -height / 2, startZ);
     } else if (type === 'hill') {
       const hillGeometry = new THREE.ConeGeometry(width, height * 2, 16);
       const hillMaterial = new THREE.MeshStandardMaterial({
@@ -238,7 +238,7 @@ export class SceneManager {
         roughness: 0.9
       });
       const hill = new THREE.Mesh(hillGeometry, hillMaterial);
-      hill.position.set(20, height, startZ);
+      hill.position.set(25, height, startZ);
       hill.castShadow = true;
       hill.receiveShadow = true;
       this.scene.add(hill);
@@ -257,7 +257,7 @@ export class SceneManager {
       });
       const valley = new THREE.Mesh(valleyGeometry, valleyMaterial);
       valley.rotation.x = Math.PI;
-      valley.position.set(20, -height, startZ);
+      valley.position.set(25, -height, startZ);
       valley.castShadow = true;
       valley.receiveShadow = true;
       this.scene.add(valley);
@@ -304,7 +304,7 @@ export class SceneManager {
   addDecoration(i) {
     const z = -i * 12 - 30;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (15 + Math.random() * 25);
+    const x = side * (18 + Math.random() * 22);
     
     const curveIndex = Math.floor((Math.abs(z) / 2) % this.trackCurve.length);
     const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
@@ -338,7 +338,7 @@ export class SceneManager {
       decoration.position.set(x, curveData.y, z);
       decoration.castShadow = true;
       decoration.receiveShadow = true;
-      decoration.userData = { isDecoration: true, baseZ: z, baseY: curveData.y };
+      decoration.userData = { isDecoration: true, baseZ: z, baseY: curveData.y, baseX: x };
       this.scene.add(decoration);
       this.decorations.push(decoration);
     }
@@ -514,7 +514,7 @@ export class SceneManager {
   addAnimal(i) {
     const z = -i * 25 - 50;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (8 + Math.random() * 15);
+    const x = side * (10 + Math.random() * 15);
 
     const animalType = Math.floor(Math.random() * 3);
     let animal;
@@ -683,8 +683,8 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        segment.position.x = segment.userData.baseX + curveData.x;
-        segment.position.y = segment.userData.baseY + curveData.y;
+        segment.position.x = curveData.x + segment.userData.originalOffsetX;
+        segment.position.y = curveData.y - 0.8;
       }
     });
 
@@ -702,7 +702,8 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        decoration.position.y = decoration.userData.baseY + curveData.y;
+        decoration.position.y = curveData.y;
+        decoration.position.x = decoration.userData.baseX;
       }
     });
 
@@ -757,8 +758,8 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        segment.position.x = segment.userData.baseX + curveData.x;
-        segment.position.y = segment.userData.baseY + curveData.y;
+        segment.position.x = curveData.x + segment.userData.originalOffsetX;
+        segment.position.y = curveData.y - 0.8;
       }
     });
 
@@ -776,7 +777,8 @@ export class SceneManager {
         
         const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
         const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
-        decoration.position.y = decoration.userData.baseY + curveData.y;
+        decoration.position.y = curveData.y;
+        decoration.position.x = decoration.userData.baseX;
       }
     });
 
