@@ -3,8 +3,11 @@ import { EventEmitter } from './eventemitter.js';
 export class UI extends EventEmitter {
   constructor() {
     super();
+    this.minimapCanvas = null;
+    this.minimapCtx = null;
     this.setupElements();
     this.setupEventListeners();
+    this.initMinimap();
   }
 
   setupElements() {
@@ -273,5 +276,153 @@ export class UI extends EventEmitter {
     if (this.elements.finalResult) {
       this.elements.finalResult.style.display = 'none';
     }
+  }
+
+  initMinimap() {
+    this.minimapCanvas = document.getElementById('minimap');
+    if (this.minimapCanvas) {
+      this.minimapCanvas.width = 220;
+      this.minimapCanvas.height = 280;
+      this.minimapCtx = this.minimapCanvas.getContext('2d');
+      
+      const label = document.createElement('div');
+      label.className = 'minimap-label';
+      label.textContent = '🗺️ 小地图';
+      label.style.position = 'absolute';
+      label.style.top = '5px';
+      label.style.left = '50%';
+      label.style.transform = 'translateX(-50%)';
+      label.style.fontSize = '1rem';
+      label.style.fontWeight = 'bold';
+      label.style.color = '#20B2AA';
+      label.style.pointerEvents = 'none';
+      this.minimapCanvas.parentElement.style.position = 'relative';
+      this.minimapCanvas.parentElement.appendChild(label);
+    }
+  }
+
+  updateMinimap(playerDistance, finishLineDistance, aiDistances) {
+    if (!this.minimapCtx) return;
+    
+    const ctx = this.minimapCtx;
+    const width = this.minimapCanvas.width;
+    const height = this.minimapCanvas.height;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const padding = 15;
+    const trackWidth = width - padding * 2;
+    const trackHeight = height - padding * 2 - 20;
+    
+    ctx.fillStyle = '#F5F5F5';
+    ctx.fillRect(0, 0, width, height);
+    
+    const startZ = Math.max(0, playerDistance - 50);
+    const endZ = startZ + 100;
+    const scale = trackHeight / 100;
+    
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    
+    const sampleCount = 20;
+    for (let i = 0; i <= sampleCount; i++) {
+      const z = startZ + (endZ - startZ) * (i / sampleCount);
+      const segmentIndex = Math.floor(z / 2) % 500;
+      const x = padding + (this.trackCurveData && this.trackCurveData[segmentIndex] 
+        ? (this.trackCurveData[segmentIndex].x + 10) / 20 * trackWidth 
+        : trackWidth / 2);
+      const y = height - padding - 20 - (z - startZ) * scale;
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+    
+    const trackOffsets = [-4, 0, 4];
+    trackOffsets.forEach((offset, index) => {
+      ctx.strokeStyle = index === 1 ? '#757575' : 'rgba(117, 117, 117, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      for (let i = 0; i <= sampleCount; i++) {
+        const z = startZ + (endZ - startZ) * (i / sampleCount);
+        const segmentIndex = Math.floor(z / 2) % 500;
+        const baseX = this.trackCurveData && this.trackCurveData[segmentIndex] 
+          ? (this.trackCurveData[segmentIndex].x + 10) / 20 * trackWidth 
+          : trackWidth / 2;
+        const x = padding + baseX + offset * 5;
+        const y = height - padding - 20 - (z - startZ) * scale;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+    });
+    
+    const playerY = height - padding - 20 - (playerDistance - startZ) * scale;
+    const playerX = padding + trackWidth / 2;
+    
+    this.drawTrainIcon(ctx, playerX, playerY, '#CC3300', true);
+    
+    aiDistances.forEach((aiDist, index) => {
+      const aiY = height - padding - 20 - (aiDist - startZ) * scale;
+      const colors = ['#3498DB', '#9B59B6', '#2ECC71'];
+      this.drawTrainIcon(ctx, playerX, aiY, colors[index], false);
+    });
+    
+    const finishY = height - padding - 20 - (finishLineDistance - startZ) * scale;
+    if (finishY > padding && finishY < height - padding - 20) {
+      ctx.strokeStyle = '#FF4500';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(padding, finishY);
+      ctx.lineTo(width - padding, finishY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = '#FF4500';
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🏁', width / 2, finishY - 5);
+    }
+    
+    ctx.fillStyle = '#666';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('↑ ' + Math.floor(startZ) + 'm', padding, height - 5);
+    ctx.textAlign = 'right';
+    ctx.fillText('↓ ' + Math.floor(endZ) + 'm', width - padding, height - 5);
+  }
+
+  drawTrainIcon(ctx, x, y, color, isPlayer) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, isPlayer ? 8 : 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(x, y, isPlayer ? 4 : 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    if (isPlayer) {
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  setTrackCurveData(curveData) {
+    this.trackCurveData = curveData;
   }
 }

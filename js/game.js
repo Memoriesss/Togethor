@@ -148,6 +148,9 @@ export class GameManager {
     // 创建终点线视觉效果
     this.sceneManager.createFinishLine(this.finishLineDistance);
     
+    // 初始化小地图数据
+    this.ui.setTrackCurveData(this.sceneManager.trackCurve);
+    
     this.speechRecognizer = new SpeechRecognizer();
     
     this.sceneManager.startAnimation(() => {
@@ -229,6 +232,9 @@ export class GameManager {
       });
       
       this.updateRaceUI();
+      
+      // 更新小地图
+      this.updateMinimap();
       
       // 检测终点线
       this.checkFinishLine();
@@ -486,5 +492,14 @@ export class GameManager {
     });
     
     this.ui.showFinalResult(resultText);
+  }
+
+  updateMinimap() {
+    if (!this.playerTrain || !this.sceneManager) return;
+    
+    const playerDistance = this.playerTrain.distance;
+    const aiDistances = this.aiTrains.map(ai => ai.distance);
+    
+    this.ui.updateMinimap(playerDistance, this.finishLineDistance, aiDistances);
   }
 }
