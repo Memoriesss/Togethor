@@ -114,20 +114,21 @@ export class GameManager {
     // 玩家火车在中间轨道
     this.playerTrain = new Train(0xCC3300, true);
     this.playerTrain.getObject().position.x = this.trackOffsets[1];
+    this.playerTrain.distance = 0; // 用于排名的距离
     this.sceneManager.addObject(this.playerTrain.getObject());
     
     // AI火车1在左边轨道
     const aiTrain1 = new Train(0x2196F3, false);
     aiTrain1.getObject().position.x = this.trackOffsets[0];
     aiTrain1.currentSpeed = 40 + Math.random() * 10;
-    aiTrain1.positionZ = -30; // 稍微落后一点
+    aiTrain1.distance = -50; // 稍微落后一点
     this.sceneManager.addObject(aiTrain1.getObject());
     
     // AI火车2在右边轨道
     const aiTrain2 = new Train(0x4CAF50, false);
     aiTrain2.getObject().position.x = this.trackOffsets[2];
     aiTrain2.currentSpeed = 40 + Math.random() * 10;
-    aiTrain2.positionZ = -15; // 稍微领先一点
+    aiTrain2.distance = -25; // 稍微领先一点
     this.sceneManager.addObject(aiTrain2.getObject());
     
     this.aiTrains = [aiTrain1, aiTrain2];
@@ -138,15 +139,26 @@ export class GameManager {
       const delta = this.clock.getDelta();
       const now = Date.now();
       
+      // 计算所有火车的平均速度
+      const allTrains = [this.playerTrain, ...this.aiTrains];
+      const averageSpeed = allTrains.reduce((sum, t) => sum + t.currentSpeed, 0) / allTrains.length;
+      
+      // 更新场景（基于平均速度）
+      this.sceneManager.update(delta, this.isDriving ? averageSpeed : 0);
+      
       if (this.playerTrain) {
         this.playerTrain.update(delta);
         
         if (this.isDriving) {
           this.checkDriveComplete();
           
-          // 更新玩家火车位置（基于速度）
-          const moveFactor = this.playerTrain.currentSpeed / 40;
-          this.playerTrain.positionZ += delta * 5 * moveFactor;
+          // 更新玩家火车位置（基于速度差）
+          const relativeSpeed = this.playerTrain.currentSpeed - averageSpeed;
+          const relativeMoveFactor = relativeSpeed / 40;
+          this.playerTrain.distance += delta * 8 * relativeMoveFactor;
+          
+          // 更新火车的视觉位置（相对于相机）
+          this.playerTrain.getObject().position.z = -this.playerTrain.distance % 100;
           
           if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
             this.playerTrain.decreaseSpeed(5);
@@ -162,13 +174,17 @@ export class GameManager {
         aiTrain.update(delta);
         
         // AI火车随机变化速度
-        if (Math.random() < 0.02) {
-          aiTrain.currentSpeed = 40 + Math.random() * 10;
+        if (Math.random() < 0.01) {
+          aiTrain.currentSpeed = 35 + Math.random() * 15;
         }
         
-        // 更新AI火车位置
-        const moveFactor = aiTrain.currentSpeed / 40;
-        aiTrain.positionZ += delta * 5 * moveFactor;
+        // 更新AI火车位置（基于速度差）
+        const relativeSpeed = aiTrain.currentSpeed - averageSpeed;
+        const relativeMoveFactor = relativeSpeed / 40;
+        aiTrain.distance += delta * 8 * relativeMoveFactor;
+        
+        // 更新火车的视觉位置（相对于相机）
+        aiTrain.getObject().position.z = -aiTrain.distance % 100;
       });
       
       this.updateRaceUI();
@@ -184,7 +200,7 @@ export class GameManager {
     positions.push({
       name: '玩家',
       speed: Math.round(this.playerTrain.currentSpeed),
-      z: this.playerTrain.positionZ,
+      z: this.playerTrain.distance,
       isPlayer: true,
       color: '#CC3300'
     });
@@ -193,7 +209,7 @@ export class GameManager {
       positions.push({
         name: `AI${index + 1}`,
         speed: Math.round(ai.currentSpeed),
-        z: ai.positionZ,
+        z: ai.distance,
         isPlayer: false,
         color: index === 0 ? '#2196F3' : '#4CAF50'
       });
@@ -284,6 +300,7 @@ export class GameManager {
     this.sceneManager.removeObject(this.currentCharacter.getObject());
     
     this.playerTrain.increaseSpeed(15);
+    this.ui.updateHintText(`太棒了！速度提升到 ${Math.round(this.playerTrain.currentSpeed)}！`);
     
     this.startDriving();
   }
@@ -293,7 +310,6 @@ export class GameManager {
     this.driveStartTime = Date.now();
     this.sceneManager.startMoving();
     this.lastSpeedDecrease = Date.now();
-    this.ui.updateHintText(`火车正在行驶中！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     
     this.ui.hideQuestionUI();
     this.ui.hideInputArea();
@@ -322,7 +338,6 @@ export class GameManager {
   nextCharacter() {
     this.currentIndex++;
     this.playerTrain.reset();
-    this.playerTrain.positionZ = 0;
     this.ui.clearFireworks();
     this.ui.showPage('game');
     this.showCurrentCharacter();
@@ -345,9 +360,9 @@ export class GameManager {
 
   gameComplete() {
     const positions = [];
-    positions.push({ name: '玩家', z: this.playerTrain.positionZ });
+    positions.push({ name: '玩家', z: this.playerTrain.distance });
     this.aiTrains.forEach((ai, index) => {
-      positions.push({ name: `AI${index + 1}`, z: ai.positionZ });
+      positions.push({ name: `AI${index + 1}`, z: ai.distance });
     });
     positions.sort((a, b) => b.z - a.z);
     
