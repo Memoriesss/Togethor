@@ -122,6 +122,7 @@ export class GameManager {
     this.playerTrain.getObject().position.z = 0;
     this.playerTrain.distance = 0;
     this.playerTrain.isFinished = false;
+    this.playerTrain.trackIndex = 1;
     this.sceneManager.addObject(this.playerTrain.getObject());
     
     // AI火车1 - 100节车厢
@@ -133,6 +134,7 @@ export class GameManager {
     aiTrain1.distance = 0;
     aiTrain1.speedChangeTimer = 0;
     aiTrain1.isFinished = false;
+    aiTrain1.trackIndex = 0;
     this.sceneManager.addObject(aiTrain1.getObject());
     
     // AI火车2 - 100节车厢
@@ -144,6 +146,7 @@ export class GameManager {
     aiTrain2.distance = 0;
     aiTrain2.speedChangeTimer = 0;
     aiTrain2.isFinished = false;
+    aiTrain2.trackIndex = 2;
     this.sceneManager.addObject(aiTrain2.getObject());
     
     this.aiTrains = [aiTrain1, aiTrain2];
@@ -206,7 +209,7 @@ export class GameManager {
         }
       }
       
-      this.aiTrains.forEach((aiTrain, index) => {
+      this.aiTrains.forEach((aiTrain) => {
         if (aiTrain.isFinished) return;
         
         aiTrain.update(delta);
@@ -223,7 +226,7 @@ export class GameManager {
         // AI速度调整更平缓
         aiTrain.currentSpeed += speedDiff * delta * 1.0;
         
-        const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, index);
+        const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, aiTrain.trackIndex);
         aiTrain.getObject().position.x = aiTrackPos.x;
         aiTrain.getObject().position.y = aiTrackPos.y;
         aiTrain.getObject().position.z = 5;
