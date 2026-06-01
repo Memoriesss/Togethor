@@ -55,9 +55,9 @@ class GameManager {
     
     this.ui.on('onStart', () => this.startGame());
     this.ui.on('onHome', () => this.goHome());
-    this.ui.on('onListen', () => this.startListening());
     this.ui.on('onContinue', () => this.nextCharacter());
     this.ui.on('onCast', () => this.toggleCast());
+    this.ui.on('onManualSubmit', (value) => this.handleManualInput(value));
   }
 
   setupCast() {
@@ -113,6 +113,8 @@ class GameManager {
     
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
+    this.ui.updateHintText('正在听你说...');
+    this.ui.clearManualInput();
     
     if (this.currentCharacter) {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
@@ -122,29 +124,52 @@ class GameManager {
     this.sceneManager.addObject(this.currentCharacter.getObject());
     
     await this.currentCharacter.show();
+    
+    // 自动开始语音识别
+    this.startAutoListening();
   }
 
-  async startListening() {
+  async startAutoListening() {
     if (!this.speechRecognizer.isSupported()) {
-      alert('您的浏览器不支持语音识别功能，请使用Chrome浏览器');
+      this.ui.updateHintText('请使用键盘输入汉字');
+      this.ui.focusManualInput();
       return;
     }
 
+    this.isListeningActive = true;
+    this.keepListening();
+  }
+
+  async keepListening() {
+    if (!this.isListeningActive || !this.isPlaying) return;
+
     try {
-      this.ui.setListeningState(true);
       const charData = this.characters[this.currentIndex];
       const result = await this.speechRecognizer.startListening(charData.char);
       
-      this.ui.setListeningState(false);
-      
       if (result.isMatch) {
+        this.isListeningActive = false;
         await this.handleCorrect();
       } else {
-        this.handleIncorrect();
+        // 继续监听
+        setTimeout(() => this.keepListening(), 500);
       }
     } catch (error) {
-      this.ui.setListeningState(false);
       console.error('语音识别错误:', error);
+      // 出错后继续尝试
+      if (this.isListeningActive) {
+        setTimeout(() => this.keepListening(), 1000);
+      }
+    }
+  }
+
+  async handleManualInput(value) {
+    const charData = this.characters[this.currentIndex];
+    if (value === charData.char) {
+      this.isListeningActive = false;
+      await this.handleCorrect();
+    } else {
+      this.handleIncorrect();
     }
   }
 
@@ -182,6 +207,7 @@ class GameManager {
 
   goHome() {
     this.isPlaying = false;
+    this.isListeningActive = false;
     
     if (this.sceneManager) {
       this.sceneManager.stopAnimation();

@@ -18,7 +18,10 @@ class UI {
       sceneChar: document.getElementById('scene-char'),
       sceneDesc: document.getElementById('scene-desc'),
       sceneImage: document.getElementById('scene-image'),
-      progressFill: document.getElementById('progress-fill')
+      progressFill: document.getElementById('progress-fill'),
+      hintText: document.getElementById('hint-text'),
+      manualInput: document.getElementById('manual-input'),
+      submitBtn: document.getElementById('submit-btn')
     };
 
     this.callbacks = {
@@ -26,7 +29,8 @@ class UI {
       onHome: null,
       onListen: null,
       onContinue: null,
-      onCast: null
+      onCast: null,
+      onManualSubmit: null
     };
 
     this.init();
@@ -41,10 +45,6 @@ class UI {
       if (this.callbacks.onHome) this.callbacks.onHome();
     });
 
-    this.elements.listenBtn.addEventListener('click', () => {
-      if (this.callbacks.onListen) this.callbacks.onListen();
-    });
-
     this.elements.continueBtn.addEventListener('click', () => {
       if (this.callbacks.onContinue) this.callbacks.onContinue();
     });
@@ -53,7 +53,37 @@ class UI {
       if (this.callbacks.onCast) this.callbacks.onCast();
     });
 
+    this.elements.submitBtn.addEventListener('click', () => {
+      this.handleManualSubmit();
+    });
+
+    this.elements.manualInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.handleManualSubmit();
+      }
+    });
+
     this.showPage('home');
+  }
+
+  handleManualSubmit() {
+    const value = this.elements.manualInput.value.trim();
+    if (value && this.callbacks.onManualSubmit) {
+      this.callbacks.onManualSubmit(value);
+    }
+    this.elements.manualInput.value = '';
+  }
+
+  updateHintText(text) {
+    this.elements.hintText.textContent = text;
+  }
+
+  clearManualInput() {
+    this.elements.manualInput.value = '';
+  }
+
+  focusManualInput() {
+    this.elements.manualInput.focus();
   }
 
   showPage(pageName) {
@@ -76,16 +106,6 @@ class UI {
     this.elements.sceneChar.textContent = char;
     this.elements.sceneDesc.textContent = desc;
     this.elements.sceneImage.textContent = emoji;
-  }
-
-  setListeningState(isListening) {
-    if (isListening) {
-      this.elements.listenBtn.classList.add('listening');
-      this.elements.listenBtn.textContent = '🎤';
-    } else {
-      this.elements.listenBtn.classList.remove('listening');
-      this.elements.listenBtn.textContent = '🎤';
-    }
   }
 
   showFireworks() {

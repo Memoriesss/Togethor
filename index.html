@@ -28,9 +28,12 @@
         <div class="hint-panel">
           <div id="current-char" class="current-char">山</div>
           <div id="current-pinyin" class="current-pinyin">shān</div>
-          <div class="hint-text">大声说出这个字吧！</div>
+          <div class="hint-text" id="hint-text">正在听你说...</div>
         </div>
-        <button id="listen-btn" class="listen-btn">🎤</button>
+        <div class="input-area">
+          <input type="text" id="manual-input" class="manual-input" placeholder="或者在这里输入汉字" maxlength="1">
+          <button id="submit-btn" class="submit-btn">确定 ✓</button>
+        </div>
         <div class="progress-bar">
           <div id="progress-fill" class="progress-fill"></div>
         </div>
