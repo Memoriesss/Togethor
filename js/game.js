@@ -223,7 +223,7 @@ export class GameManager {
     const elapsed = Date.now() - this.driveStartTime;
     if (elapsed >= this.driveDuration) {
       this.stopDriving();
-      this.showScenePage();
+      this.nextCharacter();
     } else {
       const remaining = Math.ceil((this.driveDuration - elapsed) / 1000);
       this.ui.updateHintText(`火车正在行驶中... ${remaining}秒`);
