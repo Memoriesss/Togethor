@@ -31,6 +31,7 @@ export class UI extends EventEmitter {
       manualInput: document.getElementById('manual-input'),
       fireworks: document.getElementById('fireworks'),
       questionUI: document.getElementById('question-ui'),
+      inputArea: document.querySelector('.input-area'),
       racePanel: document.getElementById('race-panel')
     };
   }
@@ -206,5 +207,17 @@ export class UI extends EventEmitter {
       
       this.elements.racePanel.appendChild(raceItem);
     });
+  }
+
+  showInputArea() {
+    if (this.elements.inputArea) {
+      this.elements.inputArea.style.display = 'flex';
+    }
+  }
+
+  hideInputArea() {
+    if (this.elements.inputArea) {
+      this.elements.inputArea.style.display = 'none';
+    }
   }
 }

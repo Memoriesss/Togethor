@@ -23,6 +23,7 @@ export class GameManager {
     this.clock = new THREE.Clock();
     this.lastSpeedDecrease = 0;
     this.speedDecreaseInterval = 5000;
+    this.trackOffsets = [-4, 0, 4]; // 三条轨道的X偏移
     
     this.sceneEmojis = {
       mountain: '⛰️',
@@ -110,18 +111,26 @@ export class GameManager {
     
     this.sceneManager = new SceneManager('game-canvas');
     
+    // 玩家火车在中间轨道
     this.playerTrain = new Train(0xCC3300, true);
+    this.playerTrain.getObject().position.x = this.trackOffsets[1];
     this.sceneManager.addObject(this.playerTrain.getObject());
     
-    this.aiTrains = [];
-    const aiColors = [0x2196F3, 0x4CAF50];
-    aiColors.forEach((color, index) => {
-      const aiTrain = new Train(color, false);
-      aiTrain.currentSpeed = 40 + Math.random() * 10;
-      aiTrain.group.position.set((index === 0 ? -3 : 3), 0, -100);
-      this.sceneManager.addObject(aiTrain.getObject());
-      this.aiTrains.push(aiTrain);
-    });
+    // AI火车1在左边轨道
+    const aiTrain1 = new Train(0x2196F3, false);
+    aiTrain1.getObject().position.x = this.trackOffsets[0];
+    aiTrain1.currentSpeed = 40 + Math.random() * 10;
+    aiTrain1.positionZ = -30; // 稍微落后一点
+    this.sceneManager.addObject(aiTrain1.getObject());
+    
+    // AI火车2在右边轨道
+    const aiTrain2 = new Train(0x4CAF50, false);
+    aiTrain2.getObject().position.x = this.trackOffsets[2];
+    aiTrain2.currentSpeed = 40 + Math.random() * 10;
+    aiTrain2.positionZ = -15; // 稍微领先一点
+    this.sceneManager.addObject(aiTrain2.getObject());
+    
+    this.aiTrains = [aiTrain1, aiTrain2];
     
     this.speechRecognizer = new SpeechRecognizer();
     
@@ -135,6 +144,10 @@ export class GameManager {
         if (this.isDriving) {
           this.checkDriveComplete();
           
+          // 更新玩家火车位置（基于速度）
+          const moveFactor = this.playerTrain.currentSpeed / 40;
+          this.playerTrain.positionZ += delta * 5 * moveFactor;
+          
           if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
             this.playerTrain.decreaseSpeed(5);
             this.lastSpeedDecrease = now;
@@ -144,11 +157,18 @@ export class GameManager {
         }
       }
       
-      this.aiTrains.forEach(aiTrain => {
+      // 更新AI火车
+      this.aiTrains.forEach((aiTrain, index) => {
         aiTrain.update(delta);
+        
+        // AI火车随机变化速度
         if (Math.random() < 0.02) {
           aiTrain.currentSpeed = 40 + Math.random() * 10;
         }
+        
+        // 更新AI火车位置
+        const moveFactor = aiTrain.currentSpeed / 40;
+        aiTrain.positionZ += delta * 5 * moveFactor;
       });
       
       this.updateRaceUI();
@@ -198,6 +218,7 @@ export class GameManager {
     this.ui.updateHintText(`大声说出这个字或在下方输入！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     this.ui.clearManualInput();
     this.ui.showQuestionUI();
+    this.ui.showInputArea();
     
     if (this.currentCharacter) {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
@@ -274,9 +295,8 @@ export class GameManager {
     this.lastSpeedDecrease = Date.now();
     this.ui.updateHintText(`火车正在行驶中！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     
-    setTimeout(() => {
-      this.ui.hideQuestionUI();
-    }, 100);
+    this.ui.hideQuestionUI();
+    this.ui.hideInputArea();
   }
 
   checkDriveComplete() {
@@ -302,6 +322,7 @@ export class GameManager {
   nextCharacter() {
     this.currentIndex++;
     this.playerTrain.reset();
+    this.playerTrain.positionZ = 0;
     this.ui.clearFireworks();
     this.ui.showPage('game');
     this.showCurrentCharacter();

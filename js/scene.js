@@ -17,6 +17,7 @@ export class SceneManager {
     this.speed = 0.15;
     this.viewMode = 'third';
     this.worldOffset = 0;
+    this.trackOffset = [-4, 0, 4]; // 三条轨道的X偏移
     
     this.themes = {
       mountain: { ground: 0x228B22, sky: 0x87CEEB, accent: 0x8B4513 },
@@ -72,7 +73,7 @@ export class SceneManager {
       this.camera.position.set(0, 2.4, 0.6);
       this.camera.lookAt(0, 2.4, -20);
     } else {
-      this.camera.position.set(0, 5, 6);
+      this.camera.position.set(0, 8, 10);
       this.camera.lookAt(0, 3, -30);
     }
   }
@@ -105,15 +106,16 @@ export class SceneManager {
 
   createTrack() {
     for (let i = 0; i < 100; i++) {
-      this.addTrackSegment(i);
+      for (let track = 0; track < 3; track++) {
+        this.addTrackSegment(i, track);
+      }
     }
   }
 
-  addTrackSegment(i) {
-    const curved = i > 30 && Math.random() > 0.75;
-    const curveOffset = curved ? Math.sin(i * 0.08) * 18 : 0;
+  addTrackSegment(i, trackIndex) {
+    const offsetX = this.trackOffset[trackIndex];
     
-    const sleeperGeometry = new THREE.BoxGeometry(3, 0.3, 0.6);
+    const sleeperGeometry = new THREE.BoxGeometry(2.8, 0.3, 0.6);
     const sleeperMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x5D4E37,
       roughness: 0.8,
@@ -123,33 +125,36 @@ export class SceneManager {
     for (let j = 0; j < 4; j++) {
       const sleeper = new THREE.Mesh(sleeperGeometry, sleeperMaterial);
       sleeper.position.set(
-        curveOffset + (j - 1.5) * 0.25,
+        offsetX + (j - 1.5) * 0.25,
         -0.85,
         -i * 2.2
       );
       sleeper.castShadow = true;
       sleeper.receiveShadow = true;
+      sleeper.userData = { trackIndex };
       this.scene.add(sleeper);
       this.trackSegments.push(sleeper);
     }
 
     const railGeometry = new THREE.BoxGeometry(0.25, 0.25, 2.2);
+    const railColors = [0x4A4A4A, 0x4A4A4A, 0x4A4A4A];
     const railMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x4A4A4A,
+      color: railColors[trackIndex],
       roughness: 0.3,
       metalness: 0.8
     });
 
     const railPositions = [-0.8, 0.8];
-    railPositions.forEach(offset => {
+    railPositions.forEach(railOffset => {
       const rail = new THREE.Mesh(railGeometry, railMaterial);
       rail.position.set(
-        curveOffset + offset,
+        offsetX + railOffset,
         -0.65,
         -i * 2.2
       );
       rail.castShadow = true;
       rail.receiveShadow = true;
+      rail.userData = { trackIndex };
       this.scene.add(rail);
       this.trackSegments.push(rail);
     });
@@ -176,9 +181,9 @@ export class SceneManager {
   }
 
   addDecoration(i) {
-    const z = -i * 12 - 20;
+    const z = -i * 15 - 20;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (6 + Math.random() * 20);
+    const x = side * (15 + Math.random() * 25);
 
     const themeConfig = this.themes[this.currentTheme];
     const decorationType = Math.floor(Math.random() * 6);
@@ -591,7 +596,7 @@ export class SceneManager {
       if (distanceToTrain < 25 && animal.position.z > -20 && animal.position.z < 20) {
         animal.userData.state = 'attracted';
         
-        const targetX = (Math.random() - 0.5) * 4;
+        const targetX = (Math.random() - 0.5) * 6;
         const targetZ = animal.position.z + (Math.random() - 0.5) * 2;
         
         const dx = targetX - animal.position.x;
@@ -611,9 +616,9 @@ export class SceneManager {
       }
       
       if (animal.position.z > 30) {
-         animal.position.z -= 500;
-         animal.position.x = (Math.random() - 0.5) * 30;
-       }
+        animal.position.z -= 500;
+        animal.position.x = (Math.random() - 0.5) * 30;
+      }
     });
   }
 
