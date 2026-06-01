@@ -120,15 +120,19 @@ export class GameManager {
     const aiTrain1 = new Train(0x2196F3, false);
     aiTrain1.getObject().position.x = this.trackOffsets[0];
     aiTrain1.getObject().position.z = 0;
-    aiTrain1.currentSpeed = 40 + Math.random() * 10;
+    aiTrain1.currentSpeed = 42;
+    aiTrain1.targetSpeed = 42;
     aiTrain1.distance = 0;
+    aiTrain1.speedChangeTimer = 0;
     this.sceneManager.addObject(aiTrain1.getObject());
     
     const aiTrain2 = new Train(0x4CAF50, false);
     aiTrain2.getObject().position.x = this.trackOffsets[2];
     aiTrain2.getObject().position.z = 0;
-    aiTrain2.currentSpeed = 40 + Math.random() * 10;
+    aiTrain2.currentSpeed = 48;
+    aiTrain2.targetSpeed = 48;
     aiTrain2.distance = 0;
+    aiTrain2.speedChangeTimer = 0;
     this.sceneManager.addObject(aiTrain2.getObject());
     
     this.aiTrains = [aiTrain1, aiTrain2];
@@ -178,9 +182,15 @@ export class GameManager {
       this.aiTrains.forEach((aiTrain, index) => {
         aiTrain.update(delta);
         
-        if (Math.random() < 0.01) {
-          aiTrain.currentSpeed = 35 + Math.random() * 15;
+        aiTrain.speedChangeTimer += delta;
+        
+        if (aiTrain.speedChangeTimer > 3) {
+          aiTrain.speedChangeTimer = 0;
+          aiTrain.targetSpeed = 38 + Math.random() * 18;
         }
+        
+        const speedDiff = aiTrain.targetSpeed - aiTrain.currentSpeed;
+        aiTrain.currentSpeed += speedDiff * delta * 0.5;
         
         const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
         aiTrain.getObject().position.x = aiTrackPos.x + this.trackOffsets[index];
