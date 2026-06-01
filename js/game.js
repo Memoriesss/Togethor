@@ -216,12 +216,13 @@ export class GameManager {
         
         aiTrain.update(delta);
         
-        // AI速度每2秒变化一次
+        // AI速度每5秒变化一次，保持5秒
         aiTrain.speedChangeTimer += delta;
         
-        if (aiTrain.speedChangeTimer > 2) {
+        if (aiTrain.speedChangeTimer > 5) {
           aiTrain.speedChangeTimer = 0;
-          aiTrain.targetSpeed = 40 + Math.random() * 15;
+          // 速度范围40~50
+          aiTrain.targetSpeed = 40 + Math.random() * 10;
         }
         
         const speedDiff = aiTrain.targetSpeed - aiTrain.currentSpeed;
