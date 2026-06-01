@@ -1,16 +1,8 @@
-class UI {
+export class UI {
   constructor() {
-    this.currentPage = null;
-    this.pages = {
-      home: document.getElementById('home-page'),
-      game: document.getElementById('game-page'),
-      scene: document.getElementById('scene-page')
-    };
-    
     this.elements = {
       startBtn: document.getElementById('start-btn'),
       homeBtn: document.getElementById('home-btn'),
-      listenBtn: document.getElementById('listen-btn'),
       continueBtn: document.getElementById('continue-btn'),
       castBtn: document.getElementById('cast-btn'),
       currentChar: document.getElementById('current-char'),
@@ -27,7 +19,6 @@ class UI {
     this.callbacks = {
       onStart: null,
       onHome: null,
-      onListen: null,
       onContinue: null,
       onCast: null,
       onManualSubmit: null
@@ -66,12 +57,39 @@ class UI {
     this.showPage('home');
   }
 
+  on(eventName, callback) {
+    this.callbacks[eventName] = callback;
+  }
+
   handleManualSubmit() {
     const value = this.elements.manualInput.value.trim();
     if (value && this.callbacks.onManualSubmit) {
       this.callbacks.onManualSubmit(value);
     }
     this.elements.manualInput.value = '';
+  }
+
+  showPage(pageName) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+    document.getElementById(`${pageName}-page`).classList.add('active');
+  }
+
+  updateCharacter(char, pinyin) {
+    this.elements.currentChar.textContent = char;
+    this.elements.currentPinyin.textContent = pinyin;
+  }
+
+  updateProgress(current, total) {
+    const progress = (current / total) * 100;
+    this.elements.progressFill.style.width = `${progress}%`;
+  }
+
+  updateScenePage(char, desc, emoji) {
+    this.elements.sceneChar.textContent = char;
+    this.elements.sceneDesc.textContent = desc;
+    this.elements.sceneImage.textContent = emoji;
   }
 
   updateHintText(text) {
@@ -86,57 +104,18 @@ class UI {
     this.elements.manualInput.focus();
   }
 
-  showPage(pageName) {
-    Object.values(this.pages).forEach(page => {
-      page.classList.remove('active');
-    });
-
-    if (this.pages[pageName]) {
-      this.pages[pageName].classList.add('active');
-      this.currentPage = pageName;
-    }
-  }
-
-  updateCharacter(char, pinyin) {
-    this.elements.currentChar.textContent = char;
-    this.elements.currentPinyin.textContent = pinyin;
-  }
-
-  updateScenePage(char, desc, emoji) {
-    this.elements.sceneChar.textContent = char;
-    this.elements.sceneDesc.textContent = desc;
-    this.elements.sceneImage.textContent = emoji;
-  }
-
   showFireworks() {
-    const emojis = ['🎉', '⭐', '🌟', '✨', '🎊', '💫'];
-    
-    for (let i = 0; i < 20; i++) {
-      setTimeout(() => {
-        const firework = document.createElement('div');
-        firework.className = 'firework';
-        firework.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        firework.style.left = Math.random() * 100 + '%';
-        firework.style.top = Math.random() * 50 + 50 + '%';
-        document.body.appendChild(firework);
-
-        setTimeout(() => {
-          firework.remove();
-        }, 1500);
-      }, i * 100);
-    }
-  }
-
-  updateProgress(current, total) {
-    const percent = (current / total) * 100;
-    this.elements.progressFill.style.width = percent + '%';
-  }
-
-  on(event, callback) {
-    if (this.callbacks.hasOwnProperty(event)) {
-      this.callbacks[event] = callback;
+    const page = document.querySelector('.page.active');
+    for (let i = 0; i < 12; i++) {
+      const firework = document.createElement('div');
+      firework.className = 'firework';
+      firework.textContent = ['🎉', '✨', '🌟', '💫', '⭐'][Math.floor(Math.random() * 5)];
+      firework.style.left = `${Math.random() * 100}%`;
+      firework.style.top = `${Math.random() * 50 + 50}%`;
+      firework.style.animationDelay = `${Math.random() * 0.5}s`;
+      page.appendChild(firework);
+      
+      setTimeout(() => firework.remove(), 1500);
     }
   }
 }
-
-window.UI = UI;

@@ -1,4 +1,10 @@
-class GameManager {
+import { SceneManager } from './scene.js';
+import { Train } from './train.js';
+import { Character3D } from './character.js';
+import { SpeechRecognizer } from './speech.js';
+import { UI } from './ui.js';
+
+export class GameManager {
   constructor() {
     this.characters = [];
     this.currentIndex = 0;
@@ -9,10 +15,10 @@ class GameManager {
     this.ui = null;
     this.isPlaying = false;
     this.isListeningActive = false;
-    this.presentationRequest = null;
     this.isDriving = false;
     this.driveStartTime = 0;
     this.driveDuration = 10000;
+    this.clock = new THREE.Clock();
     
     this.sceneEmojis = {
       mountain: '⛰️',
@@ -99,10 +105,12 @@ class GameManager {
     this.speechRecognizer = new SpeechRecognizer();
     
     this.sceneManager.startAnimation(() => {
+      const delta = this.clock.getDelta();
       if (this.train && !this.isDriving) {
-        this.train.update();
+        this.train.update(delta);
       }
       if (this.isDriving) {
+        this.train.update(delta);
         this.checkDriveComplete();
       }
     });
@@ -122,6 +130,7 @@ class GameManager {
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
     this.ui.updateHintText('大声说出这个字或在下方输入！');
+    this.ui.clearManualInput();
     
     if (this.currentCharacter) {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
@@ -159,12 +168,12 @@ class GameManager {
         this.isListeningActive = false;
         await this.handleCorrect();
       } else {
-        setTimeout(() => this.keepListening(), 500);
+        setTimeout(() => this.keepListening(), 300);
       }
     } catch (error) {
       console.error('语音识别错误:', error);
       if (this.isListeningActive) {
-        setTimeout(() => this.keepListening(), 1000);
+        setTimeout(() => this.keepListening(), 800);
       }
     }
   }
@@ -252,5 +261,3 @@ class GameManager {
     this.goHome();
   }
 }
-
-window.GameManager = GameManager;

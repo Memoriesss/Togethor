@@ -1,146 +1,167 @@
-class Character3D {
-  constructor(char, color = 0xFF6B6B) {
+import * as THREE from 'three';
+
+export class Character3D {
+  constructor(char, color) {
     this.char = char;
     this.color = color;
     this.group = new THREE.Group();
-    this.canvas = null;
-    this.texture = null;
+    this.isAnimating = false;
     
     this.createCharacter();
   }
 
   createCharacter() {
-    const size = 256;
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = size;
-    this.canvas.height = size;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 512;
+    canvas.height = 512;
     
-    const ctx = this.canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    ctx.fillStyle = 'rgba(0,0,0,0)';
-    ctx.fillRect(0, 0, size, size);
-    
-    ctx.font = 'bold 200px "Microsoft YaHei", "PingFang SC", sans-serif';
+    ctx.font = '350px "Microsoft YaHei", "PingFang SC", sans-serif';
+    ctx.fillStyle = this.hexToRgba(this.color, 1);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fillText(this.char, canvas.width / 2, canvas.height / 2);
     
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 5;
-    ctx.shadowOffsetY = 5;
-    
-    ctx.fillStyle = '#' + this.color.toString(16).padStart(6, '0');
-    ctx.fillText(this.char, size / 2, size / 2);
-    
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    
-    const geometry = new THREE.BoxGeometry(3, 3, 0.5);
-    const material = new THREE.MeshStandardMaterial({
-      map: this.texture,
-      transparent: true,
-      side: THREE.DoubleSide
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    const geometry = new THREE.BoxGeometry(3, 3, 0.3);
+    const material = new THREE.MeshStandardMaterial({ 
+      map: texture,
+      roughness: 0.3,
+      metalness: 0.2,
+      transparent: true
     });
-    
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    this.group.add(mesh);
-    
-    const glowGeometry = new THREE.BoxGeometry(3.2, 3.2, 0.1);
+    this.charMesh = new THREE.Mesh(geometry, material);
+    this.charMesh.position.set(0, 1.5, -8);
+    this.charMesh.castShadow = true;
+    this.charMesh.receiveShadow = true;
+    this.group.add(this.charMesh);
+
+    const edgeGeometry = new THREE.BoxGeometry(3.1, 3.1, 0.4);
+    const edges = new THREE.EdgesGeometry(edgeGeometry);
+    const lineMaterial = new THREE.LineBasicMaterial({ 
+      color: 0x333333,
+      linewidth: 2
+    });
+    const wireframe = new THREE.LineSegments(edges, lineMaterial);
+    wireframe.position.copy(this.charMesh.position);
+    this.group.add(wireframe);
+
+    const glowGeometry = new THREE.SphereGeometry(2, 16, 16);
     const glowMaterial = new THREE.MeshBasicMaterial({
       color: this.color,
       transparent: true,
-      opacity: 0.3,
-      side: THREE.DoubleSide
+      opacity: 0.15
     });
     const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-    glow.position.z = -0.3;
+    glow.position.set(0, 1.5, -8);
     this.group.add(glow);
-    
-    this.group.position.set(0, 1.5, -5);
+    this.glowMesh = glow;
+  }
+
+  hexToRgba(hex, alpha) {
+    const r = (hex >> 16) & 255;
+    const g = (hex >> 8) & 255;
+    const b = hex & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   getObject() {
     return this.group;
   }
 
-  show() {
-    return new Promise((resolve) => {
-      this.group.scale.set(0, 0, 0);
-      
-      const startTime = Date.now();
-      const duration = 500;
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
+  async show() {
+    this.isAnimating = true;
+    this.charMesh.scale.set(0, 0, 0);
+    this.glowMesh.scale.set(0, 0, 0);
+    
+    const duration = 0.6;
+    const startTime = performance.now();
+    
+    return new Promise(resolve => {
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const eased = this.easeOutBack(progress);
         
-        this.group.scale.set(easeProgress, easeProgress, easeProgress);
-        this.group.rotation.y = Math.sin(progress * Math.PI) * 0.2;
+        this.charMesh.scale.set(eased, eased, eased);
+        this.glowMesh.scale.set(eased * 0.8, eased * 0.8, eased * 0.8);
         
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
+          this.isAnimating = false;
           resolve();
         }
       };
-      
-      animate();
+      requestAnimationFrame(animate);
     });
   }
 
-  hide() {
-    return new Promise((resolve) => {
-      const startTime = Date.now();
-      const duration = 300;
-      const startScale = this.group.scale.x;
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
+  async hide() {
+    this.isAnimating = true;
+    const duration = 0.4;
+    const startTime = performance.now();
+    
+    return new Promise(resolve => {
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - this.easeInBack(progress);
         
-        const scale = startScale * (1 - progress);
-        this.group.scale.set(scale, scale, scale);
+        this.charMesh.scale.set(eased, eased, eased);
+        this.charMesh.position.y += 0.05;
         
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
+          this.isAnimating = false;
           resolve();
         }
       };
-      
-      animate();
+      requestAnimationFrame(animate);
     });
   }
 
-  celebrate() {
-    return new Promise((resolve) => {
-      const startTime = Date.now();
-      const duration = 1000;
-      const startY = this.group.position.y;
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
+  async celebrate() {
+    this.isAnimating = true;
+    const duration = 0.8;
+    const startTime = performance.now();
+    
+    return new Promise(resolve => {
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        this.group.position.y = startY + Math.sin(progress * Math.PI * 4) * 0.5;
-        this.group.rotation.y += 0.1;
+        this.charMesh.rotation.y += 0.1;
+        this.charMesh.position.y = 1.5 + Math.sin(progress * Math.PI * 4) * 0.3;
         
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          this.group.position.y = startY;
+          this.charMesh.rotation.y = 0;
+          this.charMesh.position.y = 1.5;
+          this.isAnimating = false;
           resolve();
         }
       };
-      
-      animate();
+      requestAnimationFrame(animate);
     });
   }
 
-  update() {
-    this.group.rotation.y += 0.005;
+  easeOutBack(x) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+  }
+
+  easeInBack(x) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return c3 * x * x * x - c1 * x * x;
   }
 }
-
-window.Character3D = Character3D;

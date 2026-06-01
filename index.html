@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>汉字小火车 - 儿童识字游戏</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
   <div id="app">
@@ -21,21 +28,25 @@
     </div>
 
     <div id="game-page" class="page">
-      <div id="game-canvas"></div>
+      <canvas id="game-canvas"></canvas>
       <div class="game-ui">
         <button id="home-btn" class="home-btn">🏠</button>
         <button id="cast-btn" class="cast-btn">📺</button>
         <div class="hint-panel">
           <div id="current-char" class="current-char">山</div>
           <div id="current-pinyin" class="current-pinyin">shān</div>
-          <div class="hint-text" id="hint-text">正在听你说...</div>
+          <div class="hint-text" id="hint-text">大声说出这个字吧！</div>
         </div>
         <div class="input-area">
-          <input type="text" id="manual-input" class="manual-input" placeholder="或者在这里输入汉字" maxlength="1">
+          <input type="text" id="manual-input" class="manual-input" placeholder="输入汉字" maxlength="1">
           <button id="submit-btn" class="submit-btn">确定 ✓</button>
         </div>
         <div class="progress-bar">
           <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div class="mini-map">
+          <div class="map-track"></div>
+          <div class="map-train"></div>
         </div>
       </div>
     </div>
@@ -50,12 +61,6 @@
     </div>
   </div>
 
-  <script src="js/speech.js"></script>
-  <script src="js/scene.js"></script>
-  <script src="js/train.js"></script>
-  <script src="js/character.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/game.js"></script>
-  <script src="js/main.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
