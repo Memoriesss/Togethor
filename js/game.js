@@ -113,19 +113,22 @@ export class GameManager {
     
     this.playerTrain = new Train(0xCC3300, true);
     this.playerTrain.getObject().position.x = this.trackOffsets[1];
+    this.playerTrain.getObject().position.z = 0;
     this.playerTrain.distance = 0;
     this.sceneManager.addObject(this.playerTrain.getObject());
     
     const aiTrain1 = new Train(0x2196F3, false);
     aiTrain1.getObject().position.x = this.trackOffsets[0];
+    aiTrain1.getObject().position.z = 0;
     aiTrain1.currentSpeed = 40 + Math.random() * 10;
-    aiTrain1.distance = -50;
+    aiTrain1.distance = 0;
     this.sceneManager.addObject(aiTrain1.getObject());
     
     const aiTrain2 = new Train(0x4CAF50, false);
     aiTrain2.getObject().position.x = this.trackOffsets[2];
+    aiTrain2.getObject().position.z = 0;
     aiTrain2.currentSpeed = 40 + Math.random() * 10;
-    aiTrain2.distance = -25;
+    aiTrain2.distance = 0;
     this.sceneManager.addObject(aiTrain2.getObject());
     
     this.aiTrains = [aiTrain1, aiTrain2];
@@ -151,7 +154,7 @@ export class GameManager {
           const relativeMoveFactor = relativeSpeed / 40;
           this.playerTrain.distance += delta * 8 * relativeMoveFactor;
           
-          this.playerTrain.getObject().position.z = -this.playerTrain.distance % 100;
+          this.playerTrain.getObject().position.z = this.playerTrain.distance % 100;
           
           if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
             this.playerTrain.decreaseSpeed(5);
@@ -173,7 +176,7 @@ export class GameManager {
         const relativeMoveFactor = relativeSpeed / 40;
         aiTrain.distance += delta * 8 * relativeMoveFactor;
         
-        aiTrain.getObject().position.z = -aiTrain.distance % 100;
+        aiTrain.getObject().position.z = aiTrain.distance % 100;
       });
       
       this.updateRaceUI();
