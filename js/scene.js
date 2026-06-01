@@ -37,13 +37,13 @@ export class SceneManager {
     this.scene.fog = new THREE.Fog(fogColor, 40, 200);
 
     this.camera = new THREE.PerspectiveCamera(
-      80,
+      75,
       window.innerWidth / window.innerHeight,
       0.1,
       3000
     );
-    this.camera.position.set(0, 3.2, 1);
-    this.camera.lookAt(0, 3, -20);
+    this.camera.position.set(0, 5, 6);
+    this.camera.lookAt(0, 3, -30);
 
     this.renderer = new THREE.WebGLRenderer({ 
       canvas: this.container,
