@@ -14,7 +14,7 @@ export class SceneManager {
     this.currentTheme = 'mountain';
     this.isMoving = false;
     this.speed = 0.15;
-    this.viewMode = 'third'; // 'first' 或 'third'
+    this.viewMode = 'third';
     
     this.themes = {
       mountain: { ground: 0x228B22, sky: 0x87CEEB, accent: 0x8B4513 },
@@ -66,8 +66,8 @@ export class SceneManager {
   setCameraView(mode) {
     this.viewMode = mode;
     if (mode === 'first') {
-      this.camera.position.set(0, 2.2, 1.5);
-      this.camera.lookAt(0, 2.2, -15);
+      this.camera.position.set(0, 2.4, 0.6);
+      this.camera.lookAt(0, 2.4, -20);
     } else {
       this.camera.position.set(0, 5, 6);
       this.camera.lookAt(0, 3, -30);

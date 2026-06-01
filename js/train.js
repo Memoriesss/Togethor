@@ -37,7 +37,9 @@ export class Train {
     const cabinMaterial = new THREE.MeshStandardMaterial({ 
       color: 0xCC4422,
       roughness: 0.4,
-      metalness: 0.2
+      metalness: 0.2,
+      transparent: true,
+      opacity: 0.7
     });
     const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
     cabin.position.set(0, 2.4, -0.8);
@@ -104,9 +106,9 @@ export class Train {
 
   addWindows(bodyGroup) {
     const glassMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x88CCFF,
+      color: 0xAADDFF,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0.2,
       roughness: 0.05,
       metalness: 0.0,
       side: THREE.DoubleSide,
@@ -121,12 +123,12 @@ export class Train {
 
     const frontWindowGeometry = new THREE.BoxGeometry(1.8, 1.2, 0.08);
     const frontWindow = new THREE.Mesh(frontWindowGeometry, glassMaterial);
-    frontWindow.position.set(0, 2.6, 0.5);
+    frontWindow.position.set(0, 2.6, 0.52);
     bodyGroup.add(frontWindow);
 
     const windowFrameGeometry = new THREE.BoxGeometry(2, 1.4, 0.06);
     const windowFrame = new THREE.Mesh(windowFrameGeometry, frameMaterial);
-    windowFrame.position.set(0, 2.6, 0.46);
+    windowFrame.position.set(0, 2.6, 0.48);
     bodyGroup.add(windowFrame);
 
     const sideWindowGeometry = new THREE.BoxGeometry(0.08, 1, 1.2);
