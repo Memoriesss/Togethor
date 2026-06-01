@@ -24,6 +24,9 @@ export class GameManager {
     this.lastSpeedDecrease = 0;
     this.speedDecreaseInterval = 5000;
     this.trackOffsets = [-4, 0, 4];
+    this.finishLineDistance = 1000; // 终点线距离
+    this.finished = []; // 已到达终点的火车
+    this.gameOver = false;
     
     this.sceneEmojis = {
       mountain: '⛰️',
@@ -108,6 +111,8 @@ export class GameManager {
   startGame() {
     this.currentIndex = 0;
     this.isPlaying = true;
+    this.finished = [];
+    this.gameOver = false;
     
     this.sceneManager = new SceneManager('game-canvas');
     
@@ -115,6 +120,7 @@ export class GameManager {
     this.playerTrain.getObject().position.x = this.trackOffsets[1];
     this.playerTrain.getObject().position.z = 0;
     this.playerTrain.distance = 0;
+    this.playerTrain.isFinished = false;
     this.sceneManager.addObject(this.playerTrain.getObject());
     
     const aiTrain1 = new Train(0x2196F3, false);
@@ -124,6 +130,7 @@ export class GameManager {
     aiTrain1.targetSpeed = 42;
     aiTrain1.distance = 0;
     aiTrain1.speedChangeTimer = 0;
+    aiTrain1.isFinished = false;
     this.sceneManager.addObject(aiTrain1.getObject());
     
     const aiTrain2 = new Train(0x4CAF50, false);
@@ -133,9 +140,13 @@ export class GameManager {
     aiTrain2.targetSpeed = 48;
     aiTrain2.distance = 0;
     aiTrain2.speedChangeTimer = 0;
+    aiTrain2.isFinished = false;
     this.sceneManager.addObject(aiTrain2.getObject());
     
     this.aiTrains = [aiTrain1, aiTrain2];
+    
+    // 创建终点线视觉效果
+    this.sceneManager.createFinishLine(this.finishLineDistance);
     
     this.speechRecognizer = new SpeechRecognizer();
     
@@ -143,19 +154,30 @@ export class GameManager {
       const delta = this.clock.getDelta();
       const now = Date.now();
       
+      // 如果游戏已结束，只更新场景显示
+      if (this.gameOver) {
+        this.sceneManager.updateSceneObjects(0);
+        this.sceneManager.updateCameraPosition();
+        return;
+      }
+      
       const allTrains = [this.playerTrain, ...this.aiTrains];
-      const averageSpeed = allTrains.reduce((sum, t) => sum + t.currentSpeed, 0) / allTrains.length;
+      // 只计算未完成比赛的火车的平均速度
+      const activeTrains = allTrains.filter(t => !t.isFinished);
+      const averageSpeed = activeTrains.length > 0 
+        ? activeTrains.reduce((sum, t) => sum + t.currentSpeed, 0) / activeTrains.length 
+        : 0;
       
       const moveDistance = this.isDriving ? (averageSpeed / 40 * 0.8 * 60 * 1/60) : 0;
       
-      if (this.isDriving) {
+      if (this.isDriving && !this.gameOver) {
         this.sceneManager.totalDistance += moveDistance;
       }
       
       this.sceneManager.updateSceneObjects(moveDistance);
       this.sceneManager.updateCameraPosition();
       
-      if (this.playerTrain) {
+      if (this.playerTrain && !this.playerTrain.isFinished) {
         this.playerTrain.update(delta);
         
         const playerTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
@@ -180,6 +202,8 @@ export class GameManager {
       }
       
       this.aiTrains.forEach((aiTrain, index) => {
+        if (aiTrain.isFinished) return;
+        
         aiTrain.update(delta);
         
         aiTrain.speedChangeTimer += delta;
@@ -203,10 +227,43 @@ export class GameManager {
       });
       
       this.updateRaceUI();
+      
+      // 检测终点线
+      this.checkFinishLine();
     });
     
     this.ui.showPage('game');
     this.startCountdown();
+  }
+  
+  checkFinishLine() {
+    if (this.gameOver) return;
+    
+    const allTrains = [
+      { train: this.playerTrain, name: '玩家', isPlayer: true },
+      ...this.aiTrains.map((ai, idx) => ({ train: ai, name: `AI${idx + 1}`, isPlayer: false }))
+    ];
+    
+    allTrains.forEach(({ train, name, isPlayer }) => {
+      if (!this.finished.find(f => f.name === name) && train.distance >= this.finishLineDistance) {
+        this.finished.push({
+          name: name,
+          isPlayer: isPlayer,
+          rank: this.finished.length + 1,
+          distance: train.distance
+        });
+        
+        // 到达终点后让火车停止
+        train.currentSpeed = 0;
+        train.isFinished = true;
+      }
+    });
+    
+    // 检查是否所有火车都到达终点
+    if (this.finished.length >= 3) {
+      this.gameOver = true;
+      this.showFinalRanking();
+    }
   }
 
   startCountdown() {
@@ -380,6 +437,8 @@ export class GameManager {
     this.isPlaying = false;
     this.isListeningActive = false;
     this.isDriving = false;
+    this.finished = [];
+    this.gameOver = false;
     
     if (this.sceneManager) {
       this.sceneManager.stopMoving();
@@ -388,6 +447,7 @@ export class GameManager {
     }
     
     this.currentIndex = 0;
+    this.ui.hideFinalResult();
     this.ui.showPage('home');
   }
 
@@ -406,5 +466,23 @@ export class GameManager {
     
     alert(resultText);
     this.goHome();
+  }
+
+  showFinalRanking() {
+    this.stopDriving();
+    this.isListeningActive = false;
+    
+    let resultText = '🎉 比赛结束！🎉\n\n最终排名：\n\n';
+    this.finished.forEach((f, index) => {
+      let medal = '';
+      if (index === 0) medal = '🥇 ';
+      else if (index === 1) medal = '🥈 ';
+      else if (index === 2) medal = '🥉 ';
+      
+      const playerMarker = f.isPlayer ? ' (你)' : '';
+      resultText += `${medal}${f.rank}. ${f.name}${playerMarker}\n`;
+    });
+    
+    this.ui.showFinalResult(resultText);
   }
 }

@@ -21,6 +21,8 @@ export class SceneManager {
     this.trackCurve = [];
     this.currentCurveIndex = 0;
     this.slopeSegments = [];
+    this.finishLineGroup = null;
+    this.finishLineDistance = 0;
 
     this.init(canvasId);
   }
@@ -746,6 +748,11 @@ export class SceneManager {
         animal.position.z -= 1000;
       }
     });
+    
+    // 更新终点线位置
+    if (this.finishLineGroup) {
+      this.finishLineGroup.position.z += moveDistance;
+    }
   }
 
   update(delta, averageSpeed) {
@@ -821,6 +828,11 @@ export class SceneManager {
         animal.position.z -= 1000;
       }
     });
+    
+    // 更新终点线位置
+    if (this.finishLineGroup) {
+      this.finishLineGroup.position.z += moveDistance;
+    }
   }
 
   startAnimation(callback) {
@@ -893,5 +905,66 @@ export class SceneManager {
       this.scene.remove(slope.mesh);
     });
     this.slopeSegments = [];
+    
+    if (this.finishLineGroup) {
+      this.scene.remove(this.finishLineGroup);
+    }
+  }
+
+  createFinishLine(distance) {
+    this.finishLineDistance = distance;
+    this.finishLineGroup = new THREE.Group();
+    
+    // 创建终点线横幅
+    const bannerWidth = 20;
+    const bannerHeight = 8;
+    
+    // 创建黑白条纹的地面
+    const stripeCount = 20;
+    for (let i = 0; i < stripeCount; i++) {
+      const stripeGeo = new THREE.BoxGeometry(2, 0.2, bannerWidth / stripeCount);
+      const stripeMat = new THREE.MeshStandardMaterial({
+        color: i % 2 === 0 ? 0xFFFFFF : 0x000000,
+        roughness: 0.9
+      });
+      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      stripe.position.set(0, -0.9, -distance - (i - stripeCount/2) * (bannerWidth / stripeCount));
+      stripe.receiveShadow = true;
+      this.finishLineGroup.add(stripe);
+    }
+    
+    // 创建终点标记柱子
+    const pillarGeo = new THREE.CylinderGeometry(0.3, 0.3, 10, 16);
+    const pillarMat = new THREE.MeshStandardMaterial({
+      color: 0xFF0000,
+      roughness: 0.8
+    });
+    
+    const leftPillar = new THREE.Mesh(pillarGeo, pillarMat);
+    leftPillar.position.set(-10, 4.1, -distance);
+    leftPillar.castShadow = true;
+    this.finishLineGroup.add(leftPillar);
+    
+    const rightPillar = new THREE.Mesh(pillarGeo, pillarMat);
+    rightPillar.position.set(10, 4.1, -distance);
+    rightPillar.castShadow = true;
+    this.finishLineGroup.add(rightPillar);
+    
+    // 创建终点旗帜
+    const flagGeo = new THREE.PlaneGeometry(5, 3);
+    const flagMat = new THREE.MeshStandardMaterial({
+      color: 0xFFFFFF,
+      side: THREE.DoubleSide
+    });
+    
+    const flag1 = new THREE.Mesh(flagGeo, flagMat);
+    flag1.position.set(-10, 7.5, -distance);
+    this.finishLineGroup.add(flag1);
+    
+    const flag2 = new THREE.Mesh(flagGeo, flagMat);
+    flag2.position.set(10, 7.5, -distance);
+    this.finishLineGroup.add(flag2);
+    
+    this.scene.add(this.finishLineGroup);
   }
 }

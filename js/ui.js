@@ -34,7 +34,10 @@ export class UI extends EventEmitter {
       inputArea: document.querySelector('.input-area'),
       racePanel: document.getElementById('race-panel'),
       countdownDisplay: document.getElementById('countdown-display'),
-      countdownText: document.getElementById('countdown-text')
+      countdownText: document.getElementById('countdown-text'),
+      finalResult: document.getElementById('final-result'),
+      finalResultText: document.getElementById('final-result-text'),
+      backHomeBtn: document.getElementById('back-home-btn')
     };
   }
 
@@ -88,6 +91,12 @@ export class UI extends EventEmitter {
             this.elements.manualInput.value = '';
           }
         }
+      });
+    }
+    
+    if (this.elements.backHomeBtn) {
+      this.elements.backHomeBtn.addEventListener('click', () => {
+        this.emit('onHome');
       });
     }
   }
@@ -246,6 +255,23 @@ export class UI extends EventEmitter {
   hideCountdown() {
     if (this.elements.countdownDisplay) {
       this.elements.countdownDisplay.style.display = 'none';
+    }
+  }
+
+  showFinalResult(resultText) {
+    if (this.elements.finalResult) {
+      if (this.elements.finalResultText) {
+        this.elements.finalResultText.textContent = resultText;
+      }
+      this.elements.finalResult.style.display = 'flex';
+      
+      this.showFireworks();
+    }
+  }
+
+  hideFinalResult() {
+    if (this.elements.finalResult) {
+      this.elements.finalResult.style.display = 'none';
     }
   }
 }
