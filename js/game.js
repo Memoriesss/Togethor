@@ -8,7 +8,11 @@ class GameManager {
     this.speechRecognizer = null;
     this.ui = null;
     this.isPlaying = false;
+    this.isListeningActive = false;
     this.presentationRequest = null;
+    this.isDriving = false;
+    this.driveStartTime = 0;
+    this.driveDuration = 10000;
     
     this.sceneEmojis = {
       mountain: '⛰️',
@@ -95,8 +99,12 @@ class GameManager {
     this.speechRecognizer = new SpeechRecognizer();
     
     this.sceneManager.startAnimation(() => {
-      if (this.train) this.train.update();
-      if (this.currentCharacter) this.currentCharacter.update();
+      if (this.train && !this.isDriving) {
+        this.train.update();
+      }
+      if (this.isDriving) {
+        this.checkDriveComplete();
+      }
     });
     
     this.ui.showPage('game');
@@ -113,19 +121,19 @@ class GameManager {
     
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
-    this.ui.updateHintText('正在听你说...');
-    this.ui.clearManualInput();
+    this.ui.updateHintText('大声说出这个字或在下方输入！');
     
     if (this.currentCharacter) {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
     }
+    
+    this.sceneManager.setTheme(charData.scene);
     
     this.currentCharacter = new Character3D(charData.char, charData.color);
     this.sceneManager.addObject(this.currentCharacter.getObject());
     
     await this.currentCharacter.show();
     
-    // 自动开始语音识别
     this.startAutoListening();
   }
 
@@ -151,12 +159,10 @@ class GameManager {
         this.isListeningActive = false;
         await this.handleCorrect();
       } else {
-        // 继续监听
         setTimeout(() => this.keepListening(), 500);
       }
     } catch (error) {
       console.error('语音识别错误:', error);
-      // 出错后继续尝试
       if (this.isListeningActive) {
         setTimeout(() => this.keepListening(), 1000);
       }
@@ -180,13 +186,34 @@ class GameManager {
     await this.currentCharacter.hide();
     this.sceneManager.removeObject(this.currentCharacter.getObject());
     
-    await this.train.moveForward(10, 1500);
-    
-    this.showScenePage();
+    this.startDriving();
+  }
+
+  startDriving() {
+    this.isDriving = true;
+    this.driveStartTime = Date.now();
+    this.sceneManager.startMoving();
+    this.ui.updateHintText('火车正在行驶中...');
+  }
+
+  checkDriveComplete() {
+    const elapsed = Date.now() - this.driveStartTime;
+    if (elapsed >= this.driveDuration) {
+      this.stopDriving();
+      this.showScenePage();
+    } else {
+      const remaining = Math.ceil((this.driveDuration - elapsed) / 1000);
+      this.ui.updateHintText(`火车正在行驶中... ${remaining}秒`);
+    }
+  }
+
+  stopDriving() {
+    this.isDriving = false;
+    this.sceneManager.stopMoving();
   }
 
   handleIncorrect() {
-    alert('再试一次吧！');
+    this.ui.updateHintText('再试一次！');
   }
 
   showScenePage() {
@@ -208,8 +235,10 @@ class GameManager {
   goHome() {
     this.isPlaying = false;
     this.isListeningActive = false;
+    this.isDriving = false;
     
     if (this.sceneManager) {
+      this.sceneManager.stopMoving();
       this.sceneManager.stopAnimation();
       this.sceneManager.clear();
     }
