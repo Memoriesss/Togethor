@@ -16,6 +16,9 @@ export class UI {
       submitBtn: document.getElementById('submit-btn')
     };
 
+    this.hintPanel = document.querySelector('.hint-panel');
+    this.inputArea = document.querySelector('.input-area');
+
     this.callbacks = {
       onStart: null,
       onHome: null,
@@ -106,16 +109,55 @@ export class UI {
 
   showFireworks() {
     const page = document.querySelector('.page.active');
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
       const firework = document.createElement('div');
       firework.className = 'firework';
-      firework.textContent = ['🎉', '✨', '🌟', '💫', '⭐'][Math.floor(Math.random() * 5)];
+      firework.textContent = ['🎉', '✨', '🌟', '💫', '⭐', '🎊'][Math.floor(Math.random() * 6)];
       firework.style.left = `${Math.random() * 100}%`;
-      firework.style.top = `${Math.random() * 50 + 50}%`;
+      firework.style.top = `${Math.random() * 40 + 60}%`;
       firework.style.animationDelay = `${Math.random() * 0.5}s`;
       page.appendChild(firework);
       
       setTimeout(() => firework.remove(), 1500);
     }
   }
+
+  showQuestionUI() {
+    if (this.hintPanel) {
+      this.hintPanel.style.display = 'block';
+      this.hintPanel.style.animation = 'fadeIn 0.5s ease';
+    }
+    if (this.inputArea) {
+      this.inputArea.style.display = 'flex';
+      this.inputArea.style.animation = 'fadeIn 0.5s ease';
+    }
+  }
+
+  hideQuestionUI() {
+    if (this.hintPanel) {
+      this.hintPanel.style.animation = 'fadeOut 0.5s ease';
+      setTimeout(() => {
+        this.hintPanel.style.display = 'none';
+      }, 500);
+    }
+    if (this.inputArea) {
+      this.inputArea.style.animation = 'fadeOut 0.5s ease';
+      setTimeout(() => {
+        this.inputArea.style.display = 'none';
+      }, 500);
+    }
+  }
 }
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+`;
+document.head.appendChild(style);

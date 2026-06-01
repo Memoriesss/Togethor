@@ -132,6 +132,7 @@ export class GameManager {
     this.ui.updateProgress(this.currentIndex, this.characters.length);
     this.ui.updateHintText('大声说出这个字或在下方输入！');
     this.ui.clearManualInput();
+    this.ui.showQuestionUI();
     
     if (this.currentCharacter) {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
@@ -204,6 +205,10 @@ export class GameManager {
     this.driveStartTime = Date.now();
     this.sceneManager.startMoving();
     this.ui.updateHintText('火车正在行驶中...');
+    
+    setTimeout(() => {
+      this.ui.hideQuestionUI();
+    }, 100);
   }
 
   checkDriveComplete() {

@@ -13,7 +13,7 @@ export class SceneManager {
     this.decorations = [];
     this.currentTheme = 'mountain';
     this.isMoving = false;
-    this.speed = 0.12;
+    this.speed = 0.15;
     
     this.themes = {
       mountain: { ground: 0x228B22, sky: 0x87CEEB, accent: 0x8B4513 },
@@ -34,16 +34,16 @@ export class SceneManager {
     this.scene.background = new THREE.Color(0x87CEEB);
     
     const fogColor = 0x87CEEB;
-    this.scene.fog = new THREE.Fog(fogColor, 30, 150);
+    this.scene.fog = new THREE.Fog(fogColor, 40, 200);
 
     this.camera = new THREE.PerspectiveCamera(
-      75,
+      80,
       window.innerWidth / window.innerHeight,
       0.1,
-      2000
+      3000
     );
-    this.camera.position.set(0, 2.5, 0);
-    this.camera.lookAt(0, 2, -10);
+    this.camera.position.set(0, 3.2, 1);
+    this.camera.lookAt(0, 3, -20);
 
     this.renderer = new THREE.WebGLRenderer({ 
       canvas: this.container,
@@ -86,28 +86,28 @@ export class SceneManager {
   }
 
   createTrack() {
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 100; i++) {
       this.addTrackSegment(i);
     }
   }
 
   addTrackSegment(zIndex) {
-    const curved = zIndex > 20 && Math.random() > 0.7;
-    const curveOffset = curved ? Math.sin(zIndex * 0.08) * 15 : 0;
+    const curved = zIndex > 30 && Math.random() > 0.75;
+    const curveOffset = curved ? Math.sin(zIndex * 0.08) * 18 : 0;
     
-    const sleeperGeometry = new THREE.BoxGeometry(2.5, 0.25, 0.5);
+    const sleeperGeometry = new THREE.BoxGeometry(3, 0.3, 0.6);
     const sleeperMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x5D4E37,
       roughness: 0.8,
       metalness: 0.2
     });
     
-    for (let j = 0; j < 3; j++) {
+    for (let j = 0; j < 4; j++) {
       const sleeper = new THREE.Mesh(sleeperGeometry, sleeperMaterial);
       sleeper.position.set(
-        curveOffset + (j - 1) * 0.2,
+        curveOffset + (j - 1.5) * 0.25,
         -0.85,
-        -zIndex * 2
+        -zIndex * 2.2
       );
       sleeper.castShadow = true;
       sleeper.receiveShadow = true;
@@ -115,20 +115,20 @@ export class SceneManager {
       this.trackSegments.push(sleeper);
     }
 
-    const railGeometry = new THREE.BoxGeometry(0.2, 0.2, 2);
+    const railGeometry = new THREE.BoxGeometry(0.25, 0.25, 2.2);
     const railMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x4A4A4A,
       roughness: 0.3,
       metalness: 0.8
     });
 
-    const railPositions = [-0.7, 0.7];
+    const railPositions = [-0.8, 0.8];
     railPositions.forEach(offset => {
       const rail = new THREE.Mesh(railGeometry, railMaterial);
       rail.position.set(
         curveOffset + offset,
         -0.65,
-        -zIndex * 2
+        -zIndex * 2.2
       );
       rail.castShadow = true;
       rail.receiveShadow = true;
@@ -138,7 +138,7 @@ export class SceneManager {
   }
 
   addEnvironment() {
-    const groundGeometry = new THREE.PlaneGeometry(400, 1000);
+    const groundGeometry = new THREE.PlaneGeometry(500, 1500);
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x228B22,
       roughness: 0.9,
@@ -148,22 +148,22 @@ export class SceneManager {
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -1;
-    ground.position.z = -200;
+    ground.position.z = -300;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 80; i++) {
       this.addDecoration(i);
     }
   }
 
   addDecoration(index) {
-    const z = -index * 12 - 20;
+    const z = -index * 15 - 30;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (6 + Math.random() * 20);
+    const x = side * (8 + Math.random() * 25);
 
     const themeConfig = this.themes[this.currentTheme];
-    const decorationType = Math.floor(Math.random() * 5);
+    const decorationType = Math.floor(Math.random() * 6);
     
     let decoration;
     
@@ -172,16 +172,19 @@ export class SceneManager {
         decoration = this.createTree(themeConfig.accent);
         break;
       case 1:
-        decoration = this.createRock();
+        decoration = this.createTallTree(themeConfig.accent);
         break;
       case 2:
-        decoration = this.createBush();
+        decoration = this.createRock();
         break;
       case 3:
-        decoration = this.createFlower(themeConfig.accent);
+        decoration = this.createBush();
         break;
       case 4:
-        decoration = this.createGrass();
+        decoration = this.createFlower(themeConfig.accent);
+        break;
+      case 5:
+        decoration = this.createHill(themeConfig.accent);
         break;
     }
 
@@ -198,99 +201,121 @@ export class SceneManager {
   createTree(color) {
     const group = new THREE.Group();
     
-    const trunkGeometry = new THREE.CylinderGeometry(0.15, 0.25, 1.2, 8);
+    const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 1.5, 8);
     const trunkMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x5D4E37,
       roughness: 0.7
     });
     const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.y = 0.6;
+    trunk.position.y = 0.75;
     group.add(trunk);
     
-    const foliageGeometry = new THREE.SphereGeometry(1, 16, 16);
+    const foliageGeometry = new THREE.SphereGeometry(1.2, 16, 16);
     const foliageMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x228B22,
       roughness: 0.6
     });
     
     const foliage1 = new THREE.Mesh(foliageGeometry, foliageMaterial);
-    foliage1.position.y = 2;
+    foliage1.position.y = 2.2;
     foliage1.scale.set(1.2, 1.5, 1.2);
     group.add(foliage1);
     
     const foliage2 = new THREE.Mesh(foliageGeometry, foliageMaterial);
-    foliage2.position.y = 3.2;
+    foliage2.position.y = 3.5;
     foliage2.scale.set(0.9, 1.2, 0.9);
     group.add(foliage2);
     
     return group;
   }
 
+  createTallTree(color) {
+    const group = new THREE.Group();
+    
+    const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 2.5, 8);
+    const trunkMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x4A3728,
+      roughness: 0.7
+    });
+    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+    trunk.position.y = 1.25;
+    group.add(trunk);
+    
+    const foliageGeometry = new THREE.ConeGeometry(1.8, 4, 8);
+    const foliageMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x1B5E20,
+      roughness: 0.6
+    });
+    
+    const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+    foliage.position.y = 4;
+    group.add(foliage);
+    
+    return group;
+  }
+
+  createHill(color) {
+    const group = new THREE.Group();
+    
+    const hillGeometry = new THREE.SphereGeometry(4, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const hillMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x4CAF50,
+      roughness: 0.8
+    });
+    const hill = new THREE.Mesh(hillGeometry, hillMaterial);
+    hill.scale.y = 0.4;
+    hill.position.y = -0.5;
+    group.add(hill);
+    
+    return group;
+  }
+
   createRock() {
-    const geometry = new THREE.IcosahedronGeometry(0.6 + Math.random() * 0.4, 1);
+    const geometry = new THREE.IcosahedronGeometry(0.7 + Math.random() * 0.5, 1);
     const material = new THREE.MeshStandardMaterial({ 
       color: 0x696969,
       roughness: 0.8
     });
     const rock = new THREE.Mesh(geometry, material);
-    rock.position.y = -0.3;
+    rock.position.y = -0.4;
     rock.rotation.y = Math.random() * Math.PI * 2;
     return rock;
   }
 
   createBush() {
-    const geometry = new THREE.SphereGeometry(0.5, 12, 12);
+    const geometry = new THREE.SphereGeometry(0.6, 12, 12);
     const material = new THREE.MeshStandardMaterial({ 
       color: 0x32CD32,
       roughness: 0.7
     });
     const bush = new THREE.Mesh(geometry, material);
-    bush.position.y = -0.2;
+    bush.position.y = -0.3;
     return bush;
   }
 
   createFlower(color) {
     const group = new THREE.Group();
     
-    const stemGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
+    const stemGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 8);
     const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-    stem.position.y = 0.25;
+    stem.position.y = 0.3;
     group.add(stem);
     
-    for (let i = 0; i < 5; i++) {
-      const petalGeometry = new THREE.SphereGeometry(0.12, 8, 8);
+    for (let i = 0; i < 6; i++) {
+      const petalGeometry = new THREE.SphereGeometry(0.14, 8, 8);
       const petalMaterial = new THREE.MeshStandardMaterial({ color });
       const petal = new THREE.Mesh(petalGeometry, petalMaterial);
-      const angle = (i / 5) * Math.PI * 2;
-      petal.position.set(Math.cos(angle) * 0.15, 0.5, Math.sin(angle) * 0.15);
+      const angle = (i / 6) * Math.PI * 2;
+      petal.position.set(Math.cos(angle) * 0.18, 0.6, Math.sin(angle) * 0.18);
       group.add(petal);
     }
     
-    const centerGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+    const centerGeometry = new THREE.SphereGeometry(0.1, 8, 8);
     const centerMaterial = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
     const center = new THREE.Mesh(centerGeometry, centerMaterial);
-    center.position.y = 0.5;
+    center.position.y = 0.6;
     group.add(center);
-    
-    return group;
-  }
-
-  createGrass() {
-    const group = new THREE.Group();
-    
-    for (let i = 0; i < 8; i++) {
-      const grassGeometry = new THREE.CylinderGeometry(0.02, 0.01, 0.3, 4);
-      const grassMaterial = new THREE.MeshStandardMaterial({ color: 0x32CD32 });
-      const grass = new THREE.Mesh(grassGeometry, grassMaterial);
-      grass.position.set(
-        (i - 4) * 0.08,
-        0.15,
-        Math.random() * 0.2
-      );
-      grass.rotation.z = (Math.random() - 0.5) * 0.5;
-      group.add(grass);
-    }
     
     return group;
   }
@@ -326,7 +351,7 @@ export class SceneManager {
     this.decorations.forEach(decoration => {
       decoration.position.z += moveDistance;
       
-      if (decoration.position.z > 30) {
+      if (decoration.position.z > 40) {
         this.scene.remove(decoration);
         const idx = this.decorations.indexOf(decoration);
         if (idx > -1) this.decorations.splice(idx, 1);
@@ -336,12 +361,12 @@ export class SceneManager {
     });
 
     const lastSegment = this.trackSegments[this.trackSegments.length - 1];
-    if (lastSegment && lastSegment.position.z > -150) {
-      this.addTrackSegment(Math.floor(-lastSegment.position.z / 2) + 1);
+    if (lastSegment && lastSegment.position.z > -200) {
+      this.addTrackSegment(Math.floor(-lastSegment.position.z / 2.2) + 1);
     }
 
     this.trackSegments = this.trackSegments.filter(segment => {
-      if (segment.position.z > 30) {
+      if (segment.position.z > 40) {
         this.scene.remove(segment);
         return false;
       }
