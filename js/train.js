@@ -443,13 +443,7 @@ export class Train {
   }
 
   setRotation(direction) {
-    if (this.mainBodyGroup) {
-      this.mainBodyGroup.rotation.y = direction;
-    }
-    
-    this.carGroups.forEach((carGroup, index) => {
-      const delayFactor = 0.15 * (index + 1);
-      carGroup.rotation.y = direction * (1 - delayFactor * 0.5);
-    });
+    // 暂时禁用旋转，确保所有火车可见
+    // 后续会重新实现正确的旋转逻辑
   }
 }
