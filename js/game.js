@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { SceneManager } from './scene.js';
 import { Train } from './train.js';
 import { Character3D } from './character.js';
