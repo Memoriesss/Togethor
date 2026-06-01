@@ -184,6 +184,7 @@ export class GameManager {
         this.playerTrain.getObject().position.x = playerTrackPos.x + this.trackOffsets[1];
         this.playerTrain.getObject().position.y = playerTrackPos.y;
         this.playerTrain.getObject().position.z = 5;
+        this.playerTrain.setRotation(playerTrackPos.direction);
         
         if (this.isDriving) {
           this.checkDriveComplete();
@@ -220,6 +221,7 @@ export class GameManager {
         aiTrain.getObject().position.x = aiTrackPos.x + this.trackOffsets[index];
         aiTrain.getObject().position.y = aiTrackPos.y;
         aiTrain.getObject().position.z = 5;
+        aiTrain.setRotation(aiTrackPos.direction);
         
         const relativeSpeed = aiTrain.currentSpeed - averageSpeed;
         const relativeMoveFactor = relativeSpeed / 40;

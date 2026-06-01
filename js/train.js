@@ -16,11 +16,14 @@ export class Train {
     this.positionZ = 0;
     
     this.carCount = 6;
+    this.carGroups = [];
+    this.mainBodyGroup = null;
     this.createTrain(color);
   }
 
   createTrain(mainColor) {
     const bodyGroup = new THREE.Group();
+    this.mainBodyGroup = bodyGroup;
     
     const mainBodyGeometry = new THREE.BoxGeometry(2.8, 1.6, 4.5);
     const mainBodyMaterial = new THREE.MeshStandardMaterial({ 
@@ -124,6 +127,7 @@ export class Train {
 
     for (let i = 0; i < this.carCount; i++) {
       const carGroup = new THREE.Group();
+      this.carGroups.push(carGroup);
       const zPos = startZ + i * (carLength + gap);
 
       const carBodyGeometry = new THREE.BoxGeometry(2.6, 1.8, carLength);
@@ -436,5 +440,16 @@ export class Train {
 
   decreaseSpeed(amount) {
     this.setSpeed(this.currentSpeed - amount);
+  }
+
+  setRotation(direction) {
+    if (this.mainBodyGroup) {
+      this.mainBodyGroup.rotation.y = direction;
+    }
+    
+    this.carGroups.forEach((carGroup, index) => {
+      const delayFactor = 0.15 * (index + 1);
+      carGroup.rotation.y = direction * (1 - delayFactor * 0.5);
+    });
   }
 }
