@@ -17,42 +17,10 @@ export class SceneManager {
     this.animationCallback = null;
     this.trackOffsets = [-4, 0, 4];
     this.totalDistance = 0;
-
-    this.themes = {
-      mountain: {
-        sky: 0x87CEEB,
-        accent: 0x4CAF50
-      },
-      river: {
-        sky: 0xADD8E6,
-        accent: 0x2196F3
-      },
-      sun: {
-        sky: 0xFFE4B5,
-        accent: 0xFF9800
-      },
-      moon: {
-        sky: 0x1a1a2e,
-        accent: 0x9C27B0
-      },
-      flower: {
-        sky: 0xFFE4E1,
-        accent: 0xE91E63
-      },
-      tree: {
-        sky: 0xE8F5E9,
-        accent: 0x8BC34A
-      },
-      bird: {
-        sky: 0xE3F2FD,
-        accent: 0x00BCD4
-      },
-      fish: {
-        sky: 0xE0F7FA,
-        accent: 0x03A9F4
-      }
-    };
-    this.currentTheme = 'mountain';
+    
+    this.trackCurve = [];
+    this.currentCurveIndex = 0;
+    this.slopeSegments = [];
 
     this.init(canvasId);
   }
@@ -61,9 +29,8 @@ export class SceneManager {
     const canvas = document.getElementById(canvasId);
 
     this.scene = new THREE.Scene();
-    const themeConfig = this.themes[this.currentTheme];
-    this.scene.background = new THREE.Color(themeConfig.sky);
-    this.scene.fog = new THREE.Fog(themeConfig.sky, 30, 80);
+    this.scene.background = new THREE.Color(0x87CEEB);
+    this.scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
 
     this.camera = new THREE.PerspectiveCamera(
       70,
@@ -80,8 +47,10 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    this.generateTrackCurve();
     this.addLights();
     this.createTrack();
+    this.createSlopes();
     this.addEnvironment();
     this.addAnimals();
     this.setupCamera();
@@ -127,8 +96,43 @@ export class SceneManager {
     }
   }
 
+  generateTrackCurve() {
+    this.trackCurve = [];
+    let currentX = 0;
+    let currentY = 0;
+    let direction = 0;
+    
+    for (let i = 0; i < 100; i++) {
+      const segmentType = Math.random();
+      
+      if (segmentType < 0.25) {
+        direction += (Math.random() - 0.5) * 0.15;
+      } else if (segmentType < 0.4) {
+        direction += 0.08;
+      } else if (segmentType < 0.55) {
+        direction -= 0.08;
+      }
+      
+      direction = Math.max(-0.5, Math.min(0.5, direction));
+      
+      currentX += direction * 2;
+      currentX = Math.max(-15, Math.min(15, currentX));
+      
+      const slopeChange = Math.random() < 0.15 ? (Math.random() - 0.5) * 3 : 0;
+      currentY += slopeChange;
+      currentY = Math.max(-5, Math.min(10, currentY));
+      
+      this.trackCurve.push({
+        x: currentX,
+        y: currentY,
+        direction: direction,
+        slopeChange: slopeChange
+      });
+    }
+  }
+
   createTrack() {
-    for (let i = 0; i < 250; i++) {
+    for (let i = 0; i < 500; i++) {
       for (let trackIndex = 0; trackIndex < 3; trackIndex++) {
         this.addTrackSegment(i, trackIndex);
       }
@@ -136,7 +140,14 @@ export class SceneManager {
   }
 
   addTrackSegment(i, trackIndex) {
+    const curveIndex = i % this.trackCurve.length;
+    const curveData = this.trackCurve[curveIndex];
+    
     const offsetX = this.trackOffsets[trackIndex];
+    const baseX = curveData ? curveData.x : 0;
+    const baseY = curveData ? curveData.y : 0;
+    const curveX = baseX + offsetX;
+    const curveY = baseY;
 
     const sleeperGeometry = new THREE.BoxGeometry(3.5, 0.2, 0.4);
     const sleeperMaterial = new THREE.MeshStandardMaterial({
@@ -144,10 +155,10 @@ export class SceneManager {
       roughness: 0.8
     });
     const sleeper = new THREE.Mesh(sleeperGeometry, sleeperMaterial);
-    sleeper.position.set(offsetX, -0.8, -i * 2);
+    sleeper.position.set(curveX, curveY - 0.8, -i * 2);
     sleeper.castShadow = true;
     sleeper.receiveShadow = true;
-    sleeper.userData = { trackIndex };
+    sleeper.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
     this.scene.add(sleeper);
     this.trackSegments.push(sleeper);
 
@@ -159,20 +170,99 @@ export class SceneManager {
     });
 
     const railLeft = new THREE.Mesh(railGeometry, railMaterial);
-    railLeft.position.set(offsetX - 0.6, -0.65, -i * 2);
+    railLeft.position.set(curveX - 0.6, curveY - 0.65, -i * 2);
     railLeft.castShadow = true;
     railLeft.receiveShadow = true;
-    railLeft.userData = { trackIndex };
+    railLeft.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
     this.scene.add(railLeft);
     this.trackSegments.push(railLeft);
 
     const railRight = new THREE.Mesh(railGeometry, railMaterial);
-    railRight.position.set(offsetX + 0.6, -0.65, -i * 2);
+    railRight.position.set(curveX + 0.6, curveY - 0.65, -i * 2);
     railRight.castShadow = true;
     railRight.receiveShadow = true;
-    railRight.userData = { trackIndex };
+    railRight.userData = { trackIndex, baseX: curveX, baseY: curveY, segmentIndex: i };
     this.scene.add(railRight);
     this.trackSegments.push(railRight);
+  }
+
+  createSlopes() {
+    const slopeTypes = ['up', 'down', 'hill', 'valley'];
+    
+    for (let i = 0; i < 30; i++) {
+      const startZ = -i * 30 - 50;
+      const slopeType = slopeTypes[Math.floor(Math.random() * slopeTypes.length)];
+      const width = 8 + Math.random() * 8;
+      const height = 2 + Math.random() * 4;
+      
+      this.createSlopeSegment(startZ, width, height, slopeType);
+    }
+  }
+
+  createSlopeSegment(startZ, width, height, type) {
+    const slopeGeometry = new THREE.PlaneGeometry(width * 2, 30);
+    const slopeMaterial = new THREE.MeshStandardMaterial({
+      color: type === 'hill' ? 0x8B7355 : type === 'valley' ? 0x654321 : 0x6B8E23,
+      roughness: 0.9,
+      side: THREE.DoubleSide
+    });
+    
+    const slope = new THREE.Mesh(slopeGeometry, slopeMaterial);
+    
+    if (type === 'up') {
+      slope.rotation.x = -Math.PI / 4;
+      slope.position.set(20, height / 2, startZ);
+    } else if (type === 'down') {
+      slope.rotation.x = Math.PI / 4;
+      slope.position.set(20, -height / 2, startZ);
+    } else if (type === 'hill') {
+      const hillGeometry = new THREE.ConeGeometry(width, height * 2, 16);
+      const hillMaterial = new THREE.MeshStandardMaterial({
+        color: 0x228B22,
+        roughness: 0.9
+      });
+      const hill = new THREE.Mesh(hillGeometry, hillMaterial);
+      hill.position.set(20, height, startZ);
+      hill.castShadow = true;
+      hill.receiveShadow = true;
+      this.scene.add(hill);
+      
+      this.slopeSegments.push({
+        type: 'hill',
+        mesh: hill,
+        startZ: startZ
+      });
+      return;
+    } else if (type === 'valley') {
+      const valleyGeometry = new THREE.ConeGeometry(width, height * 2, 16);
+      const valleyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1E90FF,
+        roughness: 0.9
+      });
+      const valley = new THREE.Mesh(valleyGeometry, valleyMaterial);
+      valley.rotation.x = Math.PI;
+      valley.position.set(20, -height, startZ);
+      valley.castShadow = true;
+      valley.receiveShadow = true;
+      this.scene.add(valley);
+      
+      this.slopeSegments.push({
+        type: 'valley',
+        mesh: valley,
+        startZ: startZ
+      });
+      return;
+    }
+    
+    slope.castShadow = true;
+    slope.receiveShadow = true;
+    this.scene.add(slope);
+    
+    this.slopeSegments.push({
+      type: type,
+      mesh: slope,
+      startZ: startZ
+    });
   }
 
   addEnvironment() {
@@ -190,27 +280,29 @@ export class SceneManager {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 100; i++) {
       this.addDecoration(i);
     }
   }
 
   addDecoration(i) {
-    const z = -i * 15 - 20;
+    const z = -i * 12 - 30;
     const side = Math.random() > 0.5 ? 1 : -1;
     const x = side * (15 + Math.random() * 25);
+    
+    const curveIndex = Math.floor((Math.abs(z) / 2) % this.trackCurve.length);
+    const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
 
-    const themeConfig = this.themes[this.currentTheme];
     const decorationType = Math.floor(Math.random() * 6);
     
     let decoration;
     
     switch(decorationType) {
       case 0:
-        decoration = this.createTree(themeConfig.accent);
+        decoration = this.createTree(0x228B22);
         break;
       case 1:
-        decoration = this.createTallTree(themeConfig.accent);
+        decoration = this.createTallTree(0x2E7D32);
         break;
       case 2:
         decoration = this.createRock();
@@ -219,18 +311,18 @@ export class SceneManager {
         decoration = this.createBush();
         break;
       case 4:
-        decoration = this.createFlower(themeConfig.accent);
+        decoration = this.createFlower(0xFF69B4);
         break;
       case 5:
-        decoration = this.createHill(themeConfig.accent);
+        decoration = this.createHill();
         break;
     }
 
     if (decoration) {
-      decoration.position.set(x, 0, z);
+      decoration.position.set(x, curveData.y, z);
       decoration.castShadow = true;
       decoration.receiveShadow = true;
-      decoration.userData = { isDecoration: true, baseZ: z };
+      decoration.userData = { isDecoration: true, baseZ: z, baseY: curveData.y };
       this.scene.add(decoration);
       this.decorations.push(decoration);
     }
@@ -382,7 +474,7 @@ export class SceneManager {
     return group;
   }
 
-  createHill(color) {
+  createHill() {
     const group = new THREE.Group();
     
     const hillGeometry = new THREE.ConeGeometry(4, 3, 16);
@@ -398,15 +490,15 @@ export class SceneManager {
   }
 
   addAnimals() {
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
       this.addAnimal(i);
     }
   }
 
   addAnimal(i) {
-    const z = -i * 30 - 40;
+    const z = -i * 25 - 50;
     const side = Math.random() > 0.5 ? 1 : -1;
-    const x = side * (3 + Math.random() * 8);
+    const x = side * (8 + Math.random() * 15);
 
     const animalType = Math.floor(Math.random() * 3);
     let animal;
@@ -559,16 +651,6 @@ export class SceneManager {
     return group;
   }
 
-  setTheme(theme) {
-    this.currentTheme = theme;
-    const themeConfig = this.themes[theme] || this.themes.mountain;
-    
-    this.scene.background = new THREE.Color(themeConfig.sky);
-    if (this.scene.fog) {
-      this.scene.fog.color.set(themeConfig.sky);
-    }
-  }
-
   startMoving() {
     this.isMoving = true;
   }
@@ -587,14 +669,30 @@ export class SceneManager {
     this.trackSegments.forEach(segment => {
       segment.position.z += moveDistance;
       if (segment.position.z > 50) {
-        segment.position.z -= 500;
+        segment.position.z -= 1000;
+        
+        const curveIndex = Math.floor(-segment.position.z / 2) % this.trackCurve.length;
+        const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+        segment.position.x = segment.userData.baseX + curveData.x;
+        segment.position.y = segment.userData.baseY + curveData.y;
+      }
+    });
+
+    this.slopeSegments.forEach(slope => {
+      slope.mesh.position.z += moveDistance;
+      if (slope.mesh.position.z > 50) {
+        slope.mesh.position.z -= 1000;
       }
     });
 
     this.decorations.forEach(decoration => {
       decoration.position.z += moveDistance;
       if (decoration.position.z > 50) {
-        decoration.position.z -= 500;
+        decoration.position.z -= 1000;
+        
+        const curveIndex = Math.floor(-decoration.position.z / 2) % this.trackCurve.length;
+        const curveData = this.trackCurve[curveIndex] || { x: 0, y: 0 };
+        decoration.position.y = decoration.userData.baseY + curveData.y;
       }
     });
 
@@ -630,7 +728,7 @@ export class SceneManager {
       }
       
       if (animal.position.z > 30) {
-        animal.position.z -= 500;
+        animal.position.z -= 1000;
       }
     });
   }
@@ -690,5 +788,10 @@ export class SceneManager {
       this.scene.remove(animal);
     });
     this.animals = [];
+    
+    this.slopeSegments.forEach(slope => {
+      this.scene.remove(slope.mesh);
+    });
+    this.slopeSegments = [];
   }
 }

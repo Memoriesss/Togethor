@@ -252,8 +252,6 @@ export class GameManager {
       this.sceneManager.removeObject(this.currentCharacter.getObject());
     }
     
-    this.sceneManager.setTheme(charData.scene);
-    
     this.currentCharacter = new Character3D(charData.char, charData.color);
     this.sceneManager.addObject(this.currentCharacter.getObject());
     
