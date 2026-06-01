@@ -23,7 +23,7 @@ export class GameManager {
     this.clock = new THREE.Clock();
     this.lastSpeedDecrease = 0;
     this.speedDecreaseInterval = 5000;
-    this.trackOffsets = [-6, 0, 12];
+    this.trackOffsets = [-6, 0, 6];
     this.finishLineDistance = 1000; // 终点线距离
     this.finished = []; // 已到达终点的火车
     this.gameOver = false;
@@ -183,8 +183,8 @@ export class GameManager {
       if (this.playerTrain && !this.playerTrain.isFinished) {
         this.playerTrain.update(delta);
         
-        const playerTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
-        this.playerTrain.getObject().position.x = playerTrackPos.x + this.trackOffsets[1];
+        const playerTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, 1);
+        this.playerTrain.getObject().position.x = playerTrackPos.x;
         this.playerTrain.getObject().position.y = playerTrackPos.y;
         this.playerTrain.getObject().position.z = 5;
         this.playerTrain.setRotation(playerTrackPos.direction);
@@ -223,8 +223,8 @@ export class GameManager {
         // AI速度调整更平缓
         aiTrain.currentSpeed += speedDiff * delta * 1.0;
         
-        const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance);
-        aiTrain.getObject().position.x = aiTrackPos.x + this.trackOffsets[index];
+        const aiTrackPos = this.sceneManager.getTrackPosition(this.sceneManager.totalDistance, index);
+        aiTrain.getObject().position.x = aiTrackPos.x;
         aiTrain.getObject().position.y = aiTrackPos.y;
         aiTrain.getObject().position.z = 5;
         aiTrain.setRotation(aiTrackPos.direction);

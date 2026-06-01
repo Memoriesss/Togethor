@@ -15,7 +15,7 @@ export class SceneManager {
     this.cameraGroup = new THREE.Group();
     this.animationFrameId = null;
     this.animationCallback = null;
-    this.trackOffsets = [-6, 0, 12];
+    this.trackOffsets = [-6, 0, 6];
     this.totalDistance = 0;
     
     this.trackCurve = [];
@@ -763,11 +763,12 @@ export class SceneManager {
     this.scene.remove(object);
   }
 
-  getTrackPosition(distance) {
+  getTrackPosition(distance, trackIndex = 1) {
     const segmentIndex = Math.floor(distance / 2) % this.trackCurve.length;
     const curveData = this.trackCurve[segmentIndex] || { x: 0, y: 0 };
+    const offset = this.trackOffsets[trackIndex] || 0;
     return {
-      x: curveData.x,
+      x: curveData.x + offset,
       y: 0,
       direction: curveData.direction || 0
     };
