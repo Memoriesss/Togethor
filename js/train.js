@@ -35,11 +35,11 @@ export class Train {
 
     const cabinGeometry = new THREE.BoxGeometry(2.4, 2, 2.5);
     const cabinMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xCC4422,
+      color: 0x888888,
       roughness: 0.4,
-      metalness: 0.2,
+      metalness: 0.1,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.15
     });
     const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
     cabin.position.set(0, 2.4, -0.8);
