@@ -116,14 +116,16 @@ export class GameManager {
     
     this.sceneManager = new SceneManager('game-canvas');
     
-    this.playerTrain = new Train(0xCC3300, true);
+    // 玩家火车 - 6节车厢
+    this.playerTrain = new Train(0xCC3300, true, 6);
     this.playerTrain.getObject().position.x = this.trackOffsets[1];
     this.playerTrain.getObject().position.z = 0;
     this.playerTrain.distance = 0;
     this.playerTrain.isFinished = false;
     this.sceneManager.addObject(this.playerTrain.getObject());
     
-    const aiTrain1 = new Train(0x2196F3, false);
+    // AI火车1 - 100节车厢
+    const aiTrain1 = new Train(0x2196F3, false, 100);
     aiTrain1.getObject().position.x = this.trackOffsets[0];
     aiTrain1.getObject().position.z = 0;
     aiTrain1.currentSpeed = 42;
@@ -133,7 +135,8 @@ export class GameManager {
     aiTrain1.isFinished = false;
     this.sceneManager.addObject(aiTrain1.getObject());
     
-    const aiTrain2 = new Train(0x4CAF50, false);
+    // AI火车2 - 100节车厢
+    const aiTrain2 = new Train(0x4CAF50, false, 100);
     aiTrain2.getObject().position.x = this.trackOffsets[2];
     aiTrain2.getObject().position.z = 0;
     aiTrain2.currentSpeed = 48;
@@ -147,10 +150,6 @@ export class GameManager {
     
     // 创建终点线视觉效果
     this.sceneManager.createFinishLine(this.finishLineDistance);
-    
-    // 初始化小地图
-    this.ui.initMinimap();
-    this.ui.setTrackCurveData(this.sceneManager.trackCurve);
     
     this.speechRecognizer = new SpeechRecognizer();
     
@@ -233,9 +232,6 @@ export class GameManager {
       });
       
       this.updateRaceUI();
-      
-      // 更新小地图
-      this.updateMinimap();
       
       // 检测终点线
       this.checkFinishLine();
@@ -496,14 +492,5 @@ export class GameManager {
     });
     
     this.ui.showFinalResult(resultText);
-  }
-
-  updateMinimap() {
-    if (!this.playerTrain || !this.sceneManager) return;
-    
-    const playerDistance = this.playerTrain.distance;
-    const aiDistances = this.aiTrains.map(ai => ai.distance);
-    
-    this.ui.updateMinimap(playerDistance, this.finishLineDistance, aiDistances);
   }
 }

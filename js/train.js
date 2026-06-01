@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class Train {
-  constructor(color = 0xCC3300, isPlayer = false) {
+  constructor(color = 0xCC3300, isPlayer = false, carCount = 6) {
     this.group = new THREE.Group();
     this.wheels = [];
     this.smokeParticles = [];
@@ -15,7 +15,7 @@ export class Train {
     this.score = 0;
     this.positionZ = 0;
     
-    this.carCount = 6;
+    this.carCount = carCount;
     this.carGroups = [];
     this.mainBodyGroup = null;
     this.createTrain(color);

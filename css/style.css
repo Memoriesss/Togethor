@@ -707,27 +707,3 @@ body {
   transform: scale(1.05);
 }
 
-.minimap {
-  position: absolute;
-  top: 18%;
-  left: 3%;
-  width: 220px;
-  height: 280px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  border: 4px solid #20B2AA;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-}
-
-.minimap-label {
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #20B2AA;
-  pointer-events: none;
-}
-

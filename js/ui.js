@@ -3,11 +3,8 @@ import { EventEmitter } from './eventemitter.js';
 export class UI extends EventEmitter {
   constructor() {
     super();
-    this.minimapCanvas = null;
-    this.minimapCtx = null;
     this.setupElements();
     this.setupEventListeners();
-    // 不在这里初始化小地图，等游戏开始时再初始化
   }
 
   setupElements() {
@@ -276,112 +273,5 @@ export class UI extends EventEmitter {
     if (this.elements.finalResult) {
       this.elements.finalResult.style.display = 'none';
     }
-  }
-
-  initMinimap() {
-    this.minimapCanvas = document.getElementById('minimap');
-    if (this.minimapCanvas) {
-      this.minimapCanvas.width = 220;
-      this.minimapCanvas.height = 280;
-      this.minimapCtx = this.minimapCanvas.getContext('2d');
-      // 先简单绘制一个背景，确保能看到
-      this.minimapCtx.fillStyle = '#F5F5F5';
-      this.minimapCtx.fillRect(0, 0, 220, 280);
-      this.minimapCtx.fillStyle = '#20B2AA';
-      this.minimapCtx.font = 'bold 16px Arial';
-      this.minimapCtx.textAlign = 'center';
-      this.minimapCtx.fillText('🗺️ 小地图', 110, 30);
-    }
-  }
-
-  updateMinimap(playerDistance, finishLineDistance, aiDistances) {
-    if (!this.minimapCtx) return;
-    
-    const ctx = this.minimapCtx;
-    const width = this.minimapCanvas.width;
-    const height = this.minimapCanvas.height;
-    
-    // 绘制背景
-    ctx.fillStyle = '#F5F5F5';
-    ctx.fillRect(0, 0, width, height);
-    
-    // 绘制标题
-    ctx.fillStyle = '#20B2AA';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('🗺️ 小地图', width / 2, 30);
-    
-    const padding = 20;
-    const trackCenterX = width / 2;
-    const mapHeight = height - 60; // 剩余高度用于地图
-    const scale = mapHeight / Math.max(finishLineDistance, playerDistance + 100, 500);
-    
-    // 绘制三条轨道线
-    const trackOffsets = [-25, 0, 25];
-    trackOffsets.forEach((offset, index) => {
-      ctx.strokeStyle = index === 1 ? '#757575' : '#A0A0A0';
-      ctx.lineWidth = index === 1 ? 4 : 2;
-      ctx.beginPath();
-      ctx.moveTo(trackCenterX + offset, height - 30);
-      ctx.lineTo(trackCenterX + offset, 40);
-      ctx.stroke();
-    });
-    
-    // 绘制终点线
-    const finishY = height - 30 - finishLineDistance * scale;
-    if (finishY > 40) {
-      ctx.strokeStyle = '#FF4500';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(padding, finishY);
-      ctx.lineTo(width - padding, finishY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      
-      ctx.fillStyle = '#FF4500';
-      ctx.font = 'bold 12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('🏁 终点', width / 2, finishY - 5);
-    }
-    
-    // 绘制玩家火车
-    const playerY = height - 30 - playerDistance * scale;
-    if (playerY > 40 && playerY < height - 30) {
-      this.drawTrainIcon(ctx, trackCenterX, playerY, '#CC3300', true);
-    }
-    
-    // 绘制AI火车
-    const aiColors = ['#2196F3', '#4CAF50'];
-    aiDistances.forEach((aiDist, index) => {
-      const aiY = height - 30 - aiDist * scale;
-      if (aiY > 40 && aiY < height - 30) {
-        this.drawTrainIcon(ctx, trackCenterX + trackOffsets[index * 2], aiY, aiColors[index], false);
-      }
-    });
-  }
-
-  drawTrainIcon(ctx, x, y, color, isPlayer) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, isPlayer ? 8 : 6, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(x, y, isPlayer ? 4 : 3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    if (isPlayer) {
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
-
-  setTrackCurveData(curveData) {
-    this.trackCurveData = curveData;
   }
 }
