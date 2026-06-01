@@ -1,0 +1,68 @@
+{
+  "characters": [
+    {
+      "id": 1,
+      "char": "山",
+      "pinyin": "shān",
+      "scene": "mountain",
+      "description": "高大的山峰",
+      "color": "#4CAF50"
+    },
+    {
+      "id": 2,
+      "char": "水",
+      "pinyin": "shuǐ",
+      "scene": "river",
+      "description": "清澈的流水",
+      "color": "#2196F3"
+    },
+    {
+      "id": 3,
+      "char": "日",
+      "pinyin": "rì",
+      "scene": "sun",
+      "description": "温暖的太阳",
+      "color": "#FF9800"
+    },
+    {
+      "id": 4,
+      "char": "月",
+      "pinyin": "yuè",
+      "scene": "moon",
+      "description": "明亮的月亮",
+      "color": "#9C27B0"
+    },
+    {
+      "id": 5,
+      "char": "花",
+      "pinyin": "huā",
+      "scene": "flower",
+      "description": "美丽的花朵",
+      "color": "#E91E63"
+    },
+    {
+      "id": 6,
+      "char": "树",
+      "pinyin": "shù",
+      "scene": "tree",
+      "description": "高大的树木",
+      "color": "#8BC34A"
+    },
+    {
+      "id": 7,
+      "char": "鸟",
+      "pinyin": "niǎo",
+      "scene": "bird",
+      "description": "可爱的小鸟",
+      "color": "#00BCD4"
+    },
+    {
+      "id": 8,
+      "char": "鱼",
+      "pinyin": "yú",
+      "scene": "fish",
+      "description": "快乐的小鱼",
+      "color": "#03A9F4"
+    }
+  ]
+}

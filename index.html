@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汉字小火车 - 儿童识字游戏</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="home-page" class="page active">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <h1 class="title">汉字小火车</h1>
+      <button id="start-btn" class="start-btn">
+        <span class="train-icon">🚂</span>
+        开始学习
+      </button>
+    </div>
+
+    <div id="game-page" class="page">
+      <div id="game-canvas"></div>
+      <div class="game-ui">
+        <button id="home-btn" class="home-btn">🏠</button>
+        <button id="cast-btn" class="cast-btn">📺</button>
+        <div class="hint-panel">
+          <div id="current-char" class="current-char">山</div>
+          <div id="current-pinyin" class="current-pinyin">shān</div>
+          <div class="hint-text">大声说出这个字吧！</div>
+        </div>
+        <button id="listen-btn" class="listen-btn">🎤</button>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="scene-page" class="page">
+      <div class="scene-content">
+        <div id="scene-char" class="scene-char">山</div>
+        <div id="scene-desc" class="scene-desc">高大的山峰</div>
+        <div id="scene-image" class="scene-image">⛰️</div>
+        <button id="continue-btn" class="continue-btn">继续学习 →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/speech.js"></script>
+  <script src="js/scene.js"></script>
+  <script src="js/train.js"></script>
+  <script src="js/character.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
