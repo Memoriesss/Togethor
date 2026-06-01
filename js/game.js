@@ -135,6 +135,7 @@ export class GameManager {
 
     const charData = this.characters[this.currentIndex];
     
+    this.ui.clearFireworks();
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
     this.ui.updateHintText('大声说出这个字或在下方输入！');
@@ -250,6 +251,7 @@ export class GameManager {
   nextCharacter() {
     this.currentIndex++;
     this.train.reset();
+    this.ui.clearFireworks();
     this.ui.showPage('game');
     this.showCurrentCharacter();
   }

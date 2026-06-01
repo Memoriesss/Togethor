@@ -32,6 +32,10 @@ export class UI {
     this.init();
   }
 
+  clearFireworks() {
+    document.querySelectorAll('.firework').forEach(fw => fw.remove());
+  }
+
   init() {
     this.elements.startBtn.addEventListener('click', () => {
       if (this.callbacks.onStart) this.callbacks.onStart();
