@@ -4,7 +4,7 @@ export class Train {
   constructor() {
     this.group = new THREE.Group();
     this.wheels = [];
-    this.smokeParticles = null;
+    this.smokeParticles = [];
     this.isMoving = false;
     this.wheelRotation = 0;
     
@@ -98,10 +98,44 @@ export class Train {
     this.addHeadlights(bodyGroup);
     this.addWheels(bodyGroup);
     this.addDecorations(bodyGroup);
-    this.addSmokeSystem(bodyGroup);
+    this.createSmokeSystem(bodyGroup);
 
     bodyGroup.position.set(0, 0, 0);
     this.group.add(bodyGroup);
+  }
+
+  createSmokeSystem(parentGroup) {
+    this.smokeGroup = new THREE.Group();
+    this.smokeTime = 0;
+    
+    const smokeGeo = new THREE.SphereGeometry(0.3, 8, 8);
+    
+    for (let i = 0; i < 20; i++) {
+      const smokeMat = new THREE.MeshStandardMaterial({
+        color: 0x666666,
+        transparent: true,
+        opacity: 0.4,
+        roughness: 0.8
+      });
+      const smoke = new THREE.Mesh(smokeGeo, smokeMat);
+      smoke.position.set(
+        (Math.random() - 0.5) * 0.6,
+        4.7 + Math.random() * 2,
+        -2.5 + (Math.random() - 0.5) * 0.5
+      );
+      smoke.scale.setScalar(0.5 + Math.random() * 0.5);
+      smoke.userData = {
+        initialX: smoke.position.x,
+        initialY: smoke.position.y,
+        initialZ: smoke.position.z,
+        speed: 0.005 + Math.random() * 0.005,
+        phase: Math.random() * Math.PI * 2
+      };
+      this.smokeParticles.push(smoke);
+      this.smokeGroup.add(smoke);
+    }
+    
+    parentGroup.add(this.smokeGroup);
   }
 
   addWindows(bodyGroup) {
@@ -251,37 +285,6 @@ export class Train {
     bodyGroup.add(bell);
   }
 
-  addSmokeSystem(bodyGroup) {
-    const smokeGeometry = new THREE.BufferGeometry();
-    const smokeCount = 40;
-    const positions = new Float32Array(smokeCount * 3);
-    const opacities = new Float32Array(smokeCount);
-    const sizes = new Float32Array(smokeCount);
-
-    for (let i = 0; i < smokeCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 0.6;
-      positions[i * 3 + 1] = 4.7 + Math.random() * 3;
-      positions[i * 3 + 2] = -2.5 + (Math.random() - 0.5) * 0.4;
-      opacities[i] = Math.random() * 0.5 + 0.3;
-      sizes[i] = 0.2 + Math.random() * 0.3;
-    }
-
-    smokeGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    smokeGeometry.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
-    smokeGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-    const smokeMaterial = new THREE.PointsMaterial({
-      color: 0x999999,
-      size: 0.3,
-      transparent: true,
-      opacity: 0.5,
-      sizeAttenuation: true
-    });
-
-    this.smokeParticles = new THREE.Points(smokeGeometry, smokeMaterial);
-    bodyGroup.add(this.smokeParticles);
-  }
-
   getObject() {
     return this.group;
   }
@@ -290,6 +293,15 @@ export class Train {
     this.wheelRotation += delta * 2.5;
     this.wheels.forEach(wheel => {
       wheel.rotation.x = this.wheelRotation;
+    });
+
+    this.smokeTime += delta;
+    this.smokeParticles.forEach((smoke, index) => {
+      const userData = smoke.userData;
+      smoke.position.y = userData.initialY + Math.sin(this.smokeTime * userData.speed + userData.phase) * 0.3;
+      smoke.position.x = userData.initialX + Math.sin(this.smokeTime * userData.speed * 2 + userData.phase) * 0.2;
+      smoke.scale.setScalar(0.4 + 0.4 * Math.sin(this.smokeTime * userData.speed + userData.phase) + 0.3);
+      smoke.material.opacity = 0.2 + 0.2 * Math.sin(this.smokeTime * userData.speed * 1.5 + userData.phase);
     });
   }
 
