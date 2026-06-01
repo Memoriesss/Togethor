@@ -7,7 +7,7 @@ export class UI extends EventEmitter {
     this.minimapCtx = null;
     this.setupElements();
     this.setupEventListeners();
-    this.initMinimap();
+    // 不在这里初始化小地图，等游戏开始时再初始化
   }
 
   setupElements() {
@@ -284,20 +284,13 @@ export class UI extends EventEmitter {
       this.minimapCanvas.width = 220;
       this.minimapCanvas.height = 280;
       this.minimapCtx = this.minimapCanvas.getContext('2d');
-      
-      const label = document.createElement('div');
-      label.className = 'minimap-label';
-      label.textContent = '🗺️ 小地图';
-      label.style.position = 'absolute';
-      label.style.top = '5px';
-      label.style.left = '50%';
-      label.style.transform = 'translateX(-50%)';
-      label.style.fontSize = '1rem';
-      label.style.fontWeight = 'bold';
-      label.style.color = '#20B2AA';
-      label.style.pointerEvents = 'none';
-      this.minimapCanvas.parentElement.style.position = 'relative';
-      this.minimapCanvas.parentElement.appendChild(label);
+      // 先简单绘制一个背景，确保能看到
+      this.minimapCtx.fillStyle = '#F5F5F5';
+      this.minimapCtx.fillRect(0, 0, 220, 280);
+      this.minimapCtx.fillStyle = '#20B2AA';
+      this.minimapCtx.font = 'bold 16px Arial';
+      this.minimapCtx.textAlign = 'center';
+      this.minimapCtx.fillText('🗺️ 小地图', 110, 30);
     }
   }
 
@@ -308,77 +301,35 @@ export class UI extends EventEmitter {
     const width = this.minimapCanvas.width;
     const height = this.minimapCanvas.height;
     
-    ctx.clearRect(0, 0, width, height);
-    
-    const padding = 15;
-    const trackWidth = width - padding * 2;
-    const trackHeight = height - padding * 2 - 20;
-    
+    // 绘制背景
     ctx.fillStyle = '#F5F5F5';
     ctx.fillRect(0, 0, width, height);
     
-    const startZ = Math.max(0, playerDistance - 50);
-    const endZ = startZ + 100;
-    const scale = trackHeight / 100;
+    // 绘制标题
+    ctx.fillStyle = '#20B2AA';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🗺️ 小地图', width / 2, 30);
     
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
+    const padding = 20;
+    const trackCenterX = width / 2;
+    const mapHeight = height - 60; // 剩余高度用于地图
+    const scale = mapHeight / Math.max(finishLineDistance, playerDistance + 100, 500);
     
-    const sampleCount = 20;
-    for (let i = 0; i <= sampleCount; i++) {
-      const z = startZ + (endZ - startZ) * (i / sampleCount);
-      const segmentIndex = Math.floor(z / 2) % 500;
-      const x = padding + (this.trackCurveData && this.trackCurveData[segmentIndex] 
-        ? (this.trackCurveData[segmentIndex].x + 10) / 20 * trackWidth 
-        : trackWidth / 2);
-      const y = height - padding - 20 - (z - startZ) * scale;
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.stroke();
-    
-    const trackOffsets = [-4, 0, 4];
+    // 绘制三条轨道线
+    const trackOffsets = [-25, 0, 25];
     trackOffsets.forEach((offset, index) => {
-      ctx.strokeStyle = index === 1 ? '#757575' : 'rgba(117, 117, 117, 0.5)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = index === 1 ? '#757575' : '#A0A0A0';
+      ctx.lineWidth = index === 1 ? 4 : 2;
       ctx.beginPath();
-      
-      for (let i = 0; i <= sampleCount; i++) {
-        const z = startZ + (endZ - startZ) * (i / sampleCount);
-        const segmentIndex = Math.floor(z / 2) % 500;
-        const baseX = this.trackCurveData && this.trackCurveData[segmentIndex] 
-          ? (this.trackCurveData[segmentIndex].x + 10) / 20 * trackWidth 
-          : trackWidth / 2;
-        const x = padding + baseX + offset * 5;
-        const y = height - padding - 20 - (z - startZ) * scale;
-        
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      }
+      ctx.moveTo(trackCenterX + offset, height - 30);
+      ctx.lineTo(trackCenterX + offset, 40);
       ctx.stroke();
     });
     
-    const playerY = height - padding - 20 - (playerDistance - startZ) * scale;
-    const playerX = padding + trackWidth / 2;
-    
-    this.drawTrainIcon(ctx, playerX, playerY, '#CC3300', true);
-    
-    aiDistances.forEach((aiDist, index) => {
-      const aiY = height - padding - 20 - (aiDist - startZ) * scale;
-      const colors = ['#3498DB', '#9B59B6', '#2ECC71'];
-      this.drawTrainIcon(ctx, playerX, aiY, colors[index], false);
-    });
-    
-    const finishY = height - padding - 20 - (finishLineDistance - startZ) * scale;
-    if (finishY > padding && finishY < height - padding - 20) {
+    // 绘制终点线
+    const finishY = height - 30 - finishLineDistance * scale;
+    if (finishY > 40) {
       ctx.strokeStyle = '#FF4500';
       ctx.lineWidth = 3;
       ctx.setLineDash([5, 5]);
@@ -389,17 +340,25 @@ export class UI extends EventEmitter {
       ctx.setLineDash([]);
       
       ctx.fillStyle = '#FF4500';
-      ctx.font = 'bold 10px Arial';
+      ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('🏁', width / 2, finishY - 5);
+      ctx.fillText('🏁 终点', width / 2, finishY - 5);
     }
     
-    ctx.fillStyle = '#666';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText('↑ ' + Math.floor(startZ) + 'm', padding, height - 5);
-    ctx.textAlign = 'right';
-    ctx.fillText('↓ ' + Math.floor(endZ) + 'm', width - padding, height - 5);
+    // 绘制玩家火车
+    const playerY = height - 30 - playerDistance * scale;
+    if (playerY > 40 && playerY < height - 30) {
+      this.drawTrainIcon(ctx, trackCenterX, playerY, '#CC3300', true);
+    }
+    
+    // 绘制AI火车
+    const aiColors = ['#2196F3', '#4CAF50'];
+    aiDistances.forEach((aiDist, index) => {
+      const aiY = height - 30 - aiDist * scale;
+      if (aiY > 40 && aiY < height - 30) {
+        this.drawTrainIcon(ctx, trackCenterX + trackOffsets[index * 2], aiY, aiColors[index], false);
+      }
+    });
   }
 
   drawTrainIcon(ctx, x, y, color, isPlayer) {

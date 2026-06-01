@@ -148,7 +148,8 @@ export class GameManager {
     // 创建终点线视觉效果
     this.sceneManager.createFinishLine(this.finishLineDistance);
     
-    // 初始化小地图数据
+    // 初始化小地图
+    this.ui.initMinimap();
     this.ui.setTrackCurveData(this.sceneManager.trackCurve);
     
     this.speechRecognizer = new SpeechRecognizer();
@@ -277,6 +278,7 @@ export class GameManager {
   startCountdown() {
     let count = 3;
     
+    // 确保UI显示正确
     this.ui.showCountdown(count);
     
     const countInterval = setInterval(() => {
@@ -289,6 +291,7 @@ export class GameManager {
       } else {
         clearInterval(countInterval);
         this.ui.hideCountdown();
+        // 直接开始显示题目
         this.showCurrentCharacter();
       }
     }, 1000);
@@ -328,6 +331,7 @@ export class GameManager {
 
     const charData = this.characters[this.currentIndex];
     
+    // 确保UI正确显示
     this.ui.clearFireworks();
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
