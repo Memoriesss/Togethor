@@ -1,175 +1,210 @@
-export class UI {
+import { EventEmitter } from './eventemitter.js';
+
+export class UI extends EventEmitter {
   constructor() {
+    super();
+    this.setupElements();
+    this.setupEventListeners();
+  }
+
+  setupElements() {
+    this.pages = {
+      home: document.getElementById('home-page'),
+      game: document.getElementById('game-page'),
+      scene: document.getElementById('scene-page')
+    };
+
+    this.buttons = {
+      start: document.getElementById('start-btn'),
+      home: document.getElementById('home-btn'),
+      continue: document.getElementById('continue-btn'),
+      cast: document.getElementById('cast-btn'),
+      viewToggle: document.getElementById('view-toggle-btn'),
+      submit: document.getElementById('submit-btn')
+    };
+
     this.elements = {
-      startBtn: document.getElementById('start-btn'),
-      homeBtn: document.getElementById('home-btn'),
-      continueBtn: document.getElementById('continue-btn'),
-      castBtn: document.getElementById('cast-btn'),
-      viewBtn: document.getElementById('view-btn'),
-      currentChar: document.getElementById('current-char'),
-      currentPinyin: document.getElementById('current-pinyin'),
-      sceneChar: document.getElementById('scene-char'),
-      sceneDesc: document.getElementById('scene-desc'),
-      sceneImage: document.getElementById('scene-image'),
-      progressFill: document.getElementById('progress-fill'),
+      character: document.getElementById('character-display'),
+      pinyin: document.getElementById('pinyin-display'),
+      progressBar: document.getElementById('progress-bar'),
       hintText: document.getElementById('hint-text'),
       manualInput: document.getElementById('manual-input'),
-      submitBtn: document.getElementById('submit-btn')
+      fireworks: document.getElementById('fireworks'),
+      questionUI: document.getElementById('question-ui'),
+      racePanel: document.getElementById('race-panel')
     };
-
-    this.hintPanel = document.querySelector('.hint-panel');
-    this.inputArea = document.querySelector('.input-area');
-
-    this.callbacks = {
-      onStart: null,
-      onHome: null,
-      onContinue: null,
-      onCast: null,
-      onViewToggle: null,
-      onManualSubmit: null
-    };
-
-    this.init();
   }
 
-  clearFireworks() {
-    document.querySelectorAll('.firework').forEach(fw => fw.remove());
-  }
-
-  init() {
-    this.elements.startBtn.addEventListener('click', () => {
-      if (this.callbacks.onStart) this.callbacks.onStart();
-    });
-
-    this.elements.homeBtn.addEventListener('click', () => {
-      if (this.callbacks.onHome) this.callbacks.onHome();
-    });
-
-    this.elements.continueBtn.addEventListener('click', () => {
-      if (this.callbacks.onContinue) this.callbacks.onContinue();
-    });
-
-    this.elements.castBtn.addEventListener('click', () => {
-      if (this.callbacks.onCast) this.callbacks.onCast();
-    });
-
-    if (this.elements.viewBtn) {
-      this.elements.viewBtn.addEventListener('click', () => {
-        if (this.callbacks.onViewToggle) this.callbacks.onViewToggle();
+  setupEventListeners() {
+    if (this.buttons.start) {
+      this.buttons.start.addEventListener('click', () => {
+        this.emit('onStart');
       });
     }
 
-    this.elements.submitBtn.addEventListener('click', () => {
-      this.handleManualSubmit();
-    });
-
-    this.elements.manualInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.handleManualSubmit();
-      }
-    });
-
-    this.showPage('home');
-  }
-
-  on(eventName, callback) {
-    this.callbacks[eventName] = callback;
-  }
-
-  handleManualSubmit() {
-    const value = this.elements.manualInput.value.trim();
-    if (value && this.callbacks.onManualSubmit) {
-      this.callbacks.onManualSubmit(value);
+    if (this.buttons.home) {
+      this.buttons.home.addEventListener('click', () => {
+        this.emit('onHome');
+      });
     }
-    this.elements.manualInput.value = '';
+
+    if (this.buttons.continue) {
+      this.buttons.continue.addEventListener('click', () => {
+        this.emit('onContinue');
+      });
+    }
+
+    if (this.buttons.cast) {
+      this.buttons.cast.addEventListener('click', () => {
+        this.emit('onCast');
+      });
+    }
+
+    if (this.buttons.viewToggle) {
+      this.buttons.viewToggle.addEventListener('click', () => {
+        this.emit('onViewToggle');
+      });
+    }
+
+    if (this.buttons.submit) {
+      this.buttons.submit.addEventListener('click', () => {
+        const value = this.elements.manualInput.value.trim();
+        if (value) {
+          this.emit('onManualSubmit', value);
+          this.elements.manualInput.value = '';
+        }
+      });
+    }
+
+    if (this.elements.manualInput) {
+      this.elements.manualInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const value = this.elements.manualInput.value.trim();
+          if (value) {
+            this.emit('onManualSubmit', value);
+            this.elements.manualInput.value = '';
+          }
+        }
+      });
+    }
   }
 
   showPage(pageName) {
-    document.querySelectorAll('.page').forEach(page => {
-      page.classList.remove('active');
+    Object.keys(this.pages).forEach(page => {
+      if (this.pages[page]) {
+        this.pages[page].style.display = page === pageName ? 'block' : 'none';
+      }
     });
-    document.getElementById(`${pageName}-page`).classList.add('active');
   }
 
   updateCharacter(char, pinyin) {
-    this.elements.currentChar.textContent = char;
-    this.elements.currentPinyin.textContent = pinyin;
+    if (this.elements.character) {
+      this.elements.character.textContent = char;
+    }
+    if (this.elements.pinyin) {
+      this.elements.pinyin.textContent = pinyin;
+    }
   }
 
   updateProgress(current, total) {
-    const progress = (current / total) * 100;
-    this.elements.progressFill.style.width = `${progress}%`;
-  }
-
-  updateScenePage(char, desc, emoji) {
-    this.elements.sceneChar.textContent = char;
-    this.elements.sceneDesc.textContent = desc;
-    this.elements.sceneImage.textContent = emoji;
+    if (this.elements.progressBar) {
+      const percentage = (current / total) * 100;
+      this.elements.progressBar.style.width = `${percentage}%`;
+    }
   }
 
   updateHintText(text) {
-    this.elements.hintText.textContent = text;
-  }
-
-  clearManualInput() {
-    this.elements.manualInput.value = '';
-  }
-
-  focusManualInput() {
-    this.elements.manualInput.focus();
-  }
-
-  showFireworks() {
-    const page = document.querySelector('.page.active');
-    for (let i = 0; i < 15; i++) {
-      const firework = document.createElement('div');
-      firework.className = 'firework';
-      firework.textContent = ['🎉', '✨', '🌟', '💫', '⭐', '🎊'][Math.floor(Math.random() * 6)];
-      firework.style.left = `${Math.random() * 100}%`;
-      firework.style.top = `${Math.random() * 40 + 60}%`;
-      firework.style.animationDelay = `${Math.random() * 0.5}s`;
-      page.appendChild(firework);
-      
-      setTimeout(() => firework.remove(), 1500);
+    if (this.elements.hintText) {
+      this.elements.hintText.textContent = text;
     }
   }
 
   showQuestionUI() {
-    if (this.hintPanel) {
-      this.hintPanel.style.display = 'block';
-      this.hintPanel.style.animation = 'fadeIn 0.5s ease';
-    }
-    if (this.inputArea) {
-      this.inputArea.style.display = 'flex';
-      this.inputArea.style.animation = 'fadeIn 0.5s ease';
+    if (this.elements.questionUI) {
+      this.elements.questionUI.style.display = 'block';
     }
   }
 
   hideQuestionUI() {
-    if (this.hintPanel) {
-      this.hintPanel.style.animation = 'fadeOut 0.5s ease';
-      setTimeout(() => {
-        this.hintPanel.style.display = 'none';
-      }, 500);
+    if (this.elements.questionUI) {
+      this.elements.questionUI.style.display = 'none';
     }
-    if (this.inputArea) {
-      this.inputArea.style.animation = 'fadeOut 0.5s ease';
-      setTimeout(() => {
-        this.inputArea.style.display = 'none';
-      }, 500);
+  }
+
+  clearManualInput() {
+    if (this.elements.manualInput) {
+      this.elements.manualInput.value = '';
     }
+  }
+
+  focusManualInput() {
+    if (this.elements.manualInput) {
+      this.elements.manualInput.focus();
+    }
+  }
+
+  showFireworks() {
+    if (this.elements.fireworks) {
+      this.elements.fireworks.innerHTML = '';
+      
+      for (let i = 0; i < 20; i++) {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        firework.style.left = `${Math.random() * 100}%`;
+        firework.style.top = `${Math.random() * 100}%`;
+        firework.style.animationDelay = `${Math.random() * 0.5}s`;
+        firework.style.backgroundColor = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'][Math.floor(Math.random() * 6)];
+        this.elements.fireworks.appendChild(firework);
+      }
+      
+      this.elements.fireworks.style.display = 'block';
+      
+      setTimeout(() => {
+        if (this.elements.fireworks) {
+          this.elements.fireworks.style.display = 'none';
+          this.elements.fireworks.innerHTML = '';
+        }
+      }, 2000);
+    }
+  }
+
+  clearFireworks() {
+    if (this.elements.fireworks) {
+      this.elements.fireworks.style.display = 'none';
+      this.elements.fireworks.innerHTML = '';
+    }
+  }
+
+  updateRaceUI(positions) {
+    if (!this.elements.racePanel) return;
+    
+    this.elements.racePanel.innerHTML = '';
+    
+    positions.forEach((pos, index) => {
+      const raceItem = document.createElement('div');
+      raceItem.className = 'race-item';
+      if (pos.isPlayer) {
+        raceItem.classList.add('player-item');
+      }
+      
+      const rankBadge = document.createElement('span');
+      rankBadge.className = 'rank-badge';
+      rankBadge.textContent = index + 1;
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'race-name';
+      nameSpan.textContent = pos.name;
+      nameSpan.style.color = pos.color;
+      
+      const speedSpan = document.createElement('span');
+      speedSpan.className = 'race-speed';
+      speedSpan.textContent = `${pos.speed} km/h`;
+      
+      raceItem.appendChild(rankBadge);
+      raceItem.appendChild(nameSpan);
+      raceItem.appendChild(speedSpan);
+      
+      this.elements.racePanel.appendChild(raceItem);
+    });
   }
 }
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-20px); }
-  }
-`;
-document.head.appendChild(style);

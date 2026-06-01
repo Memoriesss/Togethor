@@ -1,22 +1,29 @@
 import * as THREE from 'three';
 
 export class Train {
-  constructor() {
+  constructor(color = 0xCC3300, isPlayer = false) {
     this.group = new THREE.Group();
     this.wheels = [];
     this.smokeParticles = [];
     this.isMoving = false;
     this.wheelRotation = 0;
+    this.currentSpeed = 40;
+    this.maxSpeed = 60;
+    this.minSpeed = 30;
+    this.baseSpeed = 40;
+    this.isPlayer = isPlayer;
+    this.score = 0;
+    this.positionZ = 0;
     
-    this.createTrain();
+    this.createTrain(color);
   }
 
-  createTrain() {
+  createTrain(mainColor) {
     const bodyGroup = new THREE.Group();
     
     const mainBodyGeometry = new THREE.BoxGeometry(2.8, 1.6, 4.5);
     const mainBodyMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xCC3300,
+      color: mainColor,
       roughness: 0.35,
       metalness: 0.2
     });
@@ -33,13 +40,16 @@ export class Train {
     frontSlope.castShadow = true;
     bodyGroup.add(frontSlope);
 
+    const cabinColor = this.isPlayer ? 0x888888 : mainColor;
+    const cabinOpacity = this.isPlayer ? 0.15 : 1;
+    
     const cabinGeometry = new THREE.BoxGeometry(2.4, 2, 2.5);
     const cabinMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x888888,
+      color: cabinColor,
       roughness: 0.4,
       metalness: 0.1,
       transparent: true,
-      opacity: 0.15
+      opacity: cabinOpacity
     });
     const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
     cabin.position.set(0, 2.4, -0.8);
@@ -290,7 +300,8 @@ export class Train {
   }
 
   update(delta) {
-    this.wheelRotation += delta * 2.5;
+    const speedFactor = this.currentSpeed / this.baseSpeed;
+    this.wheelRotation += delta * 2.5 * speedFactor;
     this.wheels.forEach(wheel => {
       wheel.rotation.x = this.wheelRotation;
     });
@@ -300,12 +311,26 @@ export class Train {
       const userData = smoke.userData;
       smoke.position.y = userData.initialY + Math.sin(this.smokeTime * userData.speed + userData.phase) * 0.3;
       smoke.position.x = userData.initialX + Math.sin(this.smokeTime * userData.speed * 2 + userData.phase) * 0.2;
-      smoke.scale.setScalar(0.4 + 0.4 * Math.sin(this.smokeTime * userData.speed + userData.phase) + 0.3);
-      smoke.material.opacity = 0.2 + 0.2 * Math.sin(this.smokeTime * userData.speed * 1.5 + userData.phase);
+      smoke.scale.setScalar((0.4 + 0.4 * Math.sin(this.smokeTime * userData.speed + userData.phase) + 0.3) * speedFactor);
+      smoke.material.opacity = (0.2 + 0.2 * Math.sin(this.smokeTime * userData.speed * 1.5 + userData.phase)) * speedFactor;
     });
   }
 
   reset() {
     this.group.position.set(0, 0, 0);
+    this.positionZ = 0;
+    this.currentSpeed = this.baseSpeed;
+  }
+
+  setSpeed(speed) {
+    this.currentSpeed = Math.max(this.minSpeed, Math.min(this.maxSpeed, speed));
+  }
+
+  increaseSpeed(amount) {
+    this.setSpeed(this.currentSpeed + amount);
+  }
+
+  decreaseSpeed(amount) {
+    this.setSpeed(this.currentSpeed - amount);
   }
 }

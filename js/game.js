@@ -10,7 +10,8 @@ export class GameManager {
     this.characters = [];
     this.currentIndex = 0;
     this.sceneManager = null;
-    this.train = null;
+    this.playerTrain = null;
+    this.aiTrains = [];
     this.currentCharacter = null;
     this.speechRecognizer = null;
     this.ui = null;
@@ -20,6 +21,8 @@ export class GameManager {
     this.driveStartTime = 0;
     this.driveDuration = 10000;
     this.clock = new THREE.Clock();
+    this.lastSpeedDecrease = 0;
+    this.speedDecreaseInterval = 5000;
     
     this.sceneEmojis = {
       mountain: '⛰️',
@@ -107,24 +110,78 @@ export class GameManager {
     
     this.sceneManager = new SceneManager('game-canvas');
     
-    this.train = new Train();
-    this.sceneManager.addObject(this.train.getObject());
+    this.playerTrain = new Train(0xCC3300, true);
+    this.sceneManager.addObject(this.playerTrain.getObject());
+    
+    this.aiTrains = [];
+    const aiColors = [0x2196F3, 0x4CAF50];
+    aiColors.forEach((color, index) => {
+      const aiTrain = new Train(color, false);
+      aiTrain.currentSpeed = 40 + Math.random() * 10;
+      aiTrain.group.position.set((index === 0 ? -3 : 3), 0, -100);
+      this.sceneManager.addObject(aiTrain.getObject());
+      this.aiTrains.push(aiTrain);
+    });
     
     this.speechRecognizer = new SpeechRecognizer();
     
     this.sceneManager.startAnimation(() => {
       const delta = this.clock.getDelta();
-      if (this.train && !this.isDriving) {
-        this.train.update(delta);
+      const now = Date.now();
+      
+      if (this.playerTrain) {
+        this.playerTrain.update(delta);
+        
+        if (this.isDriving) {
+          this.checkDriveComplete();
+          
+          if (now - this.lastSpeedDecrease > this.speedDecreaseInterval) {
+            this.playerTrain.decreaseSpeed(5);
+            this.lastSpeedDecrease = now;
+          }
+        } else {
+          this.playerTrain.decreaseSpeed(delta * 2);
+        }
       }
-      if (this.isDriving) {
-        this.train.update(delta);
-        this.checkDriveComplete();
-      }
+      
+      this.aiTrains.forEach(aiTrain => {
+        aiTrain.update(delta);
+        if (Math.random() < 0.02) {
+          aiTrain.currentSpeed = 40 + Math.random() * 10;
+        }
+      });
+      
+      this.updateRaceUI();
     });
     
     this.ui.showPage('game');
     this.showCurrentCharacter();
+  }
+
+  updateRaceUI() {
+    const positions = [];
+    
+    positions.push({
+      name: '玩家',
+      speed: Math.round(this.playerTrain.currentSpeed),
+      z: this.playerTrain.positionZ,
+      isPlayer: true,
+      color: '#CC3300'
+    });
+    
+    this.aiTrains.forEach((ai, index) => {
+      positions.push({
+        name: `AI${index + 1}`,
+        speed: Math.round(ai.currentSpeed),
+        z: ai.positionZ,
+        isPlayer: false,
+        color: index === 0 ? '#2196F3' : '#4CAF50'
+      });
+    });
+    
+    positions.sort((a, b) => b.z - a.z);
+    
+    this.ui.updateRaceUI(positions);
   }
 
   async showCurrentCharacter() {
@@ -138,7 +195,7 @@ export class GameManager {
     this.ui.clearFireworks();
     this.ui.updateCharacter(charData.char, charData.pinyin);
     this.ui.updateProgress(this.currentIndex, this.characters.length);
-    this.ui.updateHintText('大声说出这个字或在下方输入！');
+    this.ui.updateHintText(`大声说出这个字或在下方输入！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     this.ui.clearManualInput();
     this.ui.showQuestionUI();
     
@@ -158,7 +215,7 @@ export class GameManager {
 
   async startAutoListening() {
     if (!this.speechRecognizer.isSupported()) {
-      this.ui.updateHintText('请使用键盘输入汉字');
+      this.ui.updateHintText(`请使用键盘输入汉字！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
       this.ui.focusManualInput();
       return;
     }
@@ -205,6 +262,8 @@ export class GameManager {
     await this.currentCharacter.hide();
     this.sceneManager.removeObject(this.currentCharacter.getObject());
     
+    this.playerTrain.increaseSpeed(15);
+    
     this.startDriving();
   }
 
@@ -212,7 +271,8 @@ export class GameManager {
     this.isDriving = true;
     this.driveStartTime = Date.now();
     this.sceneManager.startMoving();
-    this.ui.updateHintText('火车正在行驶中...');
+    this.lastSpeedDecrease = Date.now();
+    this.ui.updateHintText(`火车正在行驶中！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     
     setTimeout(() => {
       this.ui.hideQuestionUI();
@@ -226,7 +286,7 @@ export class GameManager {
       this.nextCharacter();
     } else {
       const remaining = Math.ceil((this.driveDuration - elapsed) / 1000);
-      this.ui.updateHintText(`火车正在行驶中... ${remaining}秒`);
+      this.ui.updateHintText(`火车正在行驶中... ${remaining}秒 | 速度: ${Math.round(this.playerTrain.currentSpeed)}`);
     }
   }
 
@@ -236,21 +296,12 @@ export class GameManager {
   }
 
   handleIncorrect() {
-    this.ui.updateHintText('再试一次！');
-  }
-
-  showScenePage() {
-    const charData = this.characters[this.currentIndex];
-    const emoji = this.sceneEmojis[charData.scene] || '🎯';
-    
-    this.ui.updateScenePage(charData.char, charData.description, emoji);
-    this.ui.showPage('scene');
-    this.ui.showFireworks();
+    this.ui.updateHintText(`再试一次！速度: ${Math.round(this.playerTrain.currentSpeed)}`);
   }
 
   nextCharacter() {
     this.currentIndex++;
-    this.train.reset();
+    this.playerTrain.reset();
     this.ui.clearFireworks();
     this.ui.showPage('game');
     this.showCurrentCharacter();
@@ -272,7 +323,19 @@ export class GameManager {
   }
 
   gameComplete() {
-    alert('恭喜你！完成了所有汉字的学习！🎉');
+    const positions = [];
+    positions.push({ name: '玩家', z: this.playerTrain.positionZ });
+    this.aiTrains.forEach((ai, index) => {
+      positions.push({ name: `AI${index + 1}`, z: ai.positionZ });
+    });
+    positions.sort((a, b) => b.z - a.z);
+    
+    let resultText = '比赛结束！\n\n排名：\n';
+    positions.forEach((pos, index) => {
+      resultText += `${index + 1}. ${pos.name}\n`;
+    });
+    
+    alert(resultText);
     this.goHome();
   }
 }

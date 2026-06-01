@@ -31,25 +31,31 @@
       <canvas id="game-canvas"></canvas>
       <div class="game-ui">
         <button id="home-btn" class="home-btn">🏠</button>
-        <button id="view-btn" class="view-btn">👁️</button>
+        <button id="view-toggle-btn" class="view-btn">👁️</button>
         <button id="cast-btn" class="cast-btn">📺</button>
-        <div class="hint-panel">
-          <div id="current-char" class="current-char">山</div>
-          <div id="current-pinyin" class="current-pinyin">shān</div>
-          <div class="hint-text" id="hint-text">大声说出这个字吧！</div>
+        
+        <div id="race-panel" class="race-panel">
         </div>
+        
+        <div id="question-ui" class="question-ui">
+          <div id="character-display" class="character-display">山</div>
+          <div id="pinyin-display" class="pinyin-display">shān</div>
+          <div id="hint-text" class="hint-text">大声说出这个字吧！</div>
+        </div>
+        
         <div class="input-area">
           <input type="text" id="manual-input" class="manual-input" placeholder="输入汉字" maxlength="1">
           <button id="submit-btn" class="submit-btn">确定 ✓</button>
         </div>
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill"></div>
-        </div>
-        <div class="mini-map">
-          <div class="map-track"></div>
-          <div class="map-train"></div>
+        
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div id="progress-bar" class="progress-fill"></div>
+          </div>
         </div>
       </div>
+      
+      <div id="fireworks" class="fireworks-container"></div>
     </div>
 
     <div id="scene-page" class="page">
