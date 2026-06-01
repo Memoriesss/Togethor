@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汉字小火车 - 儿童识字游戏</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div id="home-page" class="page active">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <h1 class="title">汉字小火车</h1>
+      <button id="start-btn" class="start-btn">
+        <span class="train-icon">🚂</span>
+        开始学习
+      </button>
+    </div>
+
+    <div id="game-page" class="page">
+      <canvas id="game-canvas"></canvas>
+      <div class="game-ui">
+        <button id="home-btn" class="home-btn">🏠</button>
+        <button id="view-toggle-btn" class="view-btn">👁️</button>
+        <button id="cast-btn" class="cast-btn">📺</button>
+        
+        <div id="race-panel" class="race-panel">
+        </div>
+        
+        <div id="countdown-display" class="countdown-display">
+          <span id="countdown-text">3</span>
+        </div>
+        
+        <div id="question-ui" class="question-ui">
+          <div id="character-display" class="character-display">山</div>
+          <div id="pinyin-display" class="pinyin-display">shān</div>
+          <div id="hint-text" class="hint-text">大声说出这个字吧！</div>
+        </div>
+        
+        <div class="input-area">
+          <input type="text" id="manual-input" class="manual-input" placeholder="输入汉字" maxlength="1">
+          <button id="submit-btn" class="submit-btn">确定 ✓</button>
+        </div>
+        
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div id="progress-bar" class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="fireworks" class="fireworks-container"></div>
+      
+      <div id="final-result" class="final-result">
+        <div class="final-result-content">
+          <h2>🏆 比赛结束！</h2>
+          <pre id="final-result-text" class="final-result-text"></pre>
+          <button id="back-home-btn" class="back-home-btn">返回首页</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="scene-page" class="page">
+      <div class="scene-content">
+        <div id="scene-char" class="scene-char">山</div>
+        <div id="scene-desc" class="scene-desc">高大的山峰</div>
+        <div id="scene-image" class="scene-image">⛰️</div>
+        <button id="continue-btn" class="continue-btn">继续学习 →</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
