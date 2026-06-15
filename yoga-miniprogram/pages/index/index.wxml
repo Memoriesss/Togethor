@@ -1,0 +1,46 @@
+<view class="page-index">
+  <!-- 顶部欢迎区 -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-content">
+      <view class="hero-tag">每日 10 分钟 · AI 陪伴练习</view>
+      <view class="hero-title">开启你的瑜伽时光</view>
+      <view class="hero-sub">通过摄像头实时识别体式,AI 教练为你打分纠错</view>
+      <view class="hero-stats">
+        <view class="stat">
+          <text class="stat-num">{{poses.length}}</text>
+          <text class="stat-label">体式</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat">
+          <text class="stat-num">{{totalMinutes}}</text>
+          <text class="stat-label">总练习 min</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat">
+          <text class="stat-num">{{historyCount}}</text>
+          <text class="stat-label">已完成</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 体式列表 -->
+  <view class="section-title">
+    <text>选择体式</text>
+    <text class="section-tip">点击进入练习</text>
+  </view>
+  <view class="pose-list">
+    <pose-card
+      wx:for="{{poses}}"
+      wx:key="id"
+      pose="{{item}}"
+      bind:tap="onSelectPose"
+      data-id="{{item.id}}"
+    />
+  </view>
+
+  <view class="footer-tip">
+    建议:练习时确保全身处于画面中,光线充足、背景简洁,可获得最佳识别效果
+  </view>
+</view>

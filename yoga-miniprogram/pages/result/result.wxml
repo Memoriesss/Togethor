@@ -1,0 +1,52 @@
+<view class="page-result">
+  <!-- 评分卡 -->
+  <view class="score-hero">
+    <view class="score-hero-bg" style="background: {{heroBg}}"></view>
+    <view class="score-hero-content">
+      <view class="medal">{{medalEmoji}}</view>
+      <view class="pose-name">{{record.poseName}}</view>
+      <view class="big-score">
+        <text class="big-num">{{record.score}}</text>
+        <text class="big-unit">分</text>
+      </view>
+      <view class="score-level">{{levelText}}</view>
+      <view class="score-msg">{{comment}}</view>
+    </view>
+  </view>
+
+  <!-- 数据条 -->
+  <view class="stats-row">
+    <view class="stat-cell">
+      <text class="stat-num">{{record.duration}}</text>
+      <text class="stat-unit">s</text>
+      <text class="stat-label">总时长</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num">{{record.qualifiedSeconds}}</text>
+      <text class="stat-unit">s</text>
+      <text class="stat-label">达标时长</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num">{{qualifiedRate}}</text>
+      <text class="stat-unit">%</text>
+      <text class="stat-label">达标率</text>
+    </view>
+  </view>
+
+  <!-- 建议 -->
+  <view class="card advice-card">
+    <view class="advice-title">
+      <text class="title-h2">AI 教练建议</text>
+    </view>
+    <view class="advice-item" wx:for="{{adviceList}}" wx:key="*this">
+      <text class="advice-dot">·</text>
+      <text class="advice-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="actions">
+    <button class="btn-ghost" bindtap="onBack" style="flex: 1;">返回首页</button>
+    <button class="btn-primary" bindtap="onAgain" style="flex: 1.5; margin-left: 24rpx;">再来一次</button>
+  </view>
+</view>

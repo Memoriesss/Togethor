@@ -1,0 +1,21 @@
+<view class="pose-card" bindtap="onTap">
+  <view class="pose-icon">{{pose.emoji}}</view>
+  <view class="pose-info">
+    <view class="pose-name">
+      <text class="name-cn">{{pose.name}}</text>
+      <text class="name-en">{{pose.englishName}}</text>
+    </view>
+    <view class="pose-desc">{{pose.description}}</view>
+    <view class="pose-meta">
+      <view class="diff">
+        <text wx:for="{{[1,2,3]}}" wx:key="*this" class="dot {{item <= pose.difficulty ? 'on' : ''}}"></text>
+        <text class="diff-text">{{difficultyText}}</text>
+      </view>
+      <view class="duration">
+        <text class="duration-icon">⏱</text>
+        <text>{{pose.duration}}s</text>
+      </view>
+    </view>
+  </view>
+  <view class="pose-arrow">›</view>
+</view>

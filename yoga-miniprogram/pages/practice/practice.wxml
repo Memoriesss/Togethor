@@ -1,0 +1,110 @@
+<view class="page-practice">
+  <!-- 摄像头区域 -->
+  <view class="camera-wrap">
+    <camera
+      wx:if="{{cameraReady}}"
+      class="camera"
+      device-position="{{devicePosition}}"
+      flash="off"
+      frame-size="medium"
+      resolution="medium"
+    ></camera>
+
+    <!-- 没有相机权限时的占位 -->
+    <view wx:if="{{!cameraReady}}" class="camera-placeholder">
+      <view class="placeholder-icon">📷</view>
+      <view class="placeholder-text">{{cameraStatus}}</view>
+      <button wx:if="{{needAuth}}" class="btn-primary" bindtap="onRequestCamera" style="width: 280rpx; margin-top: 32rpx;">授权摄像头</button>
+    </view>
+
+    <!-- 骨架叠加层 -->
+    <canvas
+      type="2d"
+      id="skeletonCanvas"
+      class="skeleton-canvas"
+    ></canvas>
+
+    <!-- 顶部信息条 -->
+    <view class="top-bar">
+      <view class="pose-badge">
+        <text class="pose-emoji">{{pose.emoji}}</text>
+        <view>
+          <view class="pose-name-cn">{{pose.name}}</view>
+          <view class="pose-name-en">{{pose.englishName}}</view>
+        </view>
+      </view>
+      <view class="timer" wx:if="{{started}}">
+        <text class="timer-num">{{remainSeconds}}</text>
+        <text class="timer-unit">s</text>
+      </view>
+    </view>
+
+    <!-- 倒计时蒙层 -->
+    <view wx:if="{{countdown > 0}}" class="countdown-mask">
+      <text class="countdown-num">{{countdown}}</text>
+    </view>
+
+    <!-- 实时评分 -->
+    <view wx:if="{{started && detected}}" class="score-panel">
+      <view class="score-circle" style="--c: {{scoreColor}}">
+        <text class="score-num">{{currentScore}}</text>
+        <text class="score-label">分</text>
+      </view>
+      <view class="score-text">{{scoreText}}</view>
+    </view>
+
+    <!-- 未检测到人 -->
+    <view wx:if="{{started && !detected}}" class="no-person">
+      <text>👋 请进入画面,保持全身可见</text>
+    </view>
+
+    <!-- 底部信息 -->
+    <view wx:if="{{started}}" class="bottom-bar">
+      <view class="info-row">
+        <text class="info-label">最高分</text>
+        <text class="info-value">{{bestScore}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">达标时长</text>
+        <text class="info-value">{{qualifiedSeconds}}s</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!started && countdown === 0}}" class="bottom-actions">
+      <button class="btn-ghost" bindtap="onSwitchCamera" style="width: 200rpx;">翻转</button>
+      <button class="btn-primary" bindtap="onStart" style="flex: 1; margin-left: 24rpx;">开始练习</button>
+    </view>
+
+    <view wx:if="{{started}}" class="bottom-actions">
+      <button class="btn-ghost" bindtap="onStop" style="flex: 1;">结束练习</button>
+    </view>
+  </view>
+
+  <!-- 提示和目标参考 -->
+  <view class="guide-card card">
+    <view class="guide-header">
+      <text class="guide-title">动作要点</text>
+      <text class="guide-tag">难度 {{difficultyText}}</text>
+    </view>
+    <view class="tip-list">
+      <view wx:for="{{pose.tips}}" wx:key="*this" class="tip-item">
+        <text class="tip-dot">·</text>
+        <text class="tip-text">{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 实时规则详情 -->
+    <view wx:if="{{started && scoreDetails.length > 0}}" class="rules-section">
+      <view class="rules-title">实时评估</view>
+      <view class="rule-item" wx:for="{{scoreDetails}}" wx:key="name">
+        <text class="rule-name">{{item.name}}</text>
+        <view class="rule-bar">
+          <view class="rule-bar-bg">
+            <view class="rule-bar-fill" style="width: {{item.score}}%; background: {{item.score >= 80 ? '#7ec47e' : (item.score >= 60 ? '#e0b878' : '#d68a8a')}}"></view>
+          </view>
+          <text class="rule-score">{{item.score}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "AI 瑜伽教练",
+  "navigationBarBackgroundColor": "#f7f5f2",
+  "usingComponents": {
+    "pose-card": "/components/pose-card/pose-card"
+  }
+}
